@@ -243,6 +243,17 @@ type MastersSpec struct {
 	MaxChangelogCountToKeep *int `json:"maxChangelogCountToKeep,omitempty"`
 }
 
+type MasterCachesSpec struct {
+	InstanceSpec `json:",inline"`
+	CellTag      int16 `json:"cellTag"`
+
+	HostAddresses    []string `json:"hostAddresses,omitempty"`
+	HostAddressLabel string   `json:"hostAddressLabel,omitempty"`
+
+	MaxSnapshotCountToKeep  *int `json:"maxSnapshotCountToKeep,omitempty"`
+	MaxChangelogCountToKeep *int `json:"maxChangelogCountToKeep,omitempty"`
+}
+
 type HTTPTransportSpec struct {
 	// Reference to kubernetes.io/tls secret.
 	//+optional
@@ -453,9 +464,10 @@ type YtsaurusSpec struct {
 
 	Bootstrap *BootstrapSpec `json:"bootstrap,omitempty"`
 
-	Discovery        DiscoverySpec `json:"discovery,omitempty"`
-	PrimaryMasters   MastersSpec   `json:"primaryMasters,omitempty"`
-	SecondaryMasters []MastersSpec `json:"secondaryMasters,omitempty"`
+	Discovery        DiscoverySpec    `json:"discovery,omitempty"`
+	PrimaryMasters   MastersSpec      `json:"primaryMasters,omitempty"`
+	SecondaryMasters []MastersSpec    `json:"secondaryMasters,omitempty"`
+	MasterCaches     MasterCachesSpec `json:"masterCaches,omitempty"`
 	// +kubebuilder:validation:MinItems:=1
 	HTTPProxies []HTTPProxiesSpec `json:"httpProxies,omitempty"`
 	RPCProxies  []RPCProxiesSpec  `json:"rpcProxies,omitempty"`

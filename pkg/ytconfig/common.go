@@ -31,7 +31,7 @@ type MasterCache struct {
 }
 
 type Driver struct {
-	MasterCache        MasterCache        `yson:"master_cache,omitempty"`
+	MasterCache        *MasterCache       `yson:"master_cache,omitempty"`
 	TimestampProviders TimestampProviders `yson:"timestamp_provider,omitempty"`
 	PrimaryMaster      MasterCell         `yson:"primary_master,omitempty"`
 	APIVersion         int                `yson:"api_version,omitempty"`
@@ -40,6 +40,7 @@ type Driver struct {
 type ClusterConnection struct {
 	ClusterName         string              `yson:"cluster_name"`
 	PrimaryMaster       MasterCell          `yson:"primary_master"`
+	MasterCache         *MasterCache        `yson:"master_cache,omitempty"`
 	DiscoveryConnection DiscoveryConnection `yson:"discovery_connection,omitempty"`
 	BusClient           *Bus                `yson:"bus_client,omitempty"`
 }

@@ -42,6 +42,34 @@ func NewGenerator(ytsaurus *ytv1.Ytsaurus, clusterDomain string) *Generator {
 	}
 }
 
+func (g *Generator) getMasterCachePodFQDNSuffix() string {
+	return fmt.Sprintf("%s.%s.svc.%s",
+		g.GetMasterCachesServiceName(),
+		g.ytsaurus.Namespace,
+		g.clusterDomain,
+	)
+}
+
+func (g *Generator) getMasterCacheAddresses() []string {
+	hosts := g.ytsaurus.Spec.MasterCaches.HostAddresses
+
+	if len(hosts) == 0 {
+		masterPodSuffix := g.getMasterCachePodFQDNSuffix()
+		for _, podName := range g.GetMasterCachePodNames() {
+			hosts = append(hosts, fmt.Sprintf("%s.%s",
+				podName,
+				masterPodSuffix,
+			))
+		}
+	}
+
+	addresses := make([]string, len(hosts))
+	for idx, host := range hosts {
+		addresses[idx] = fmt.Sprintf("%s:%d", host, consts.MasterRPCPort)
+	}
+	return addresses
+}
+
 func (g *Generator) getMasterPodFqdnSuffix() string {
 	return fmt.Sprintf("%s.%s.svc.%s",
 		g.GetMastersServiceName(),
@@ -125,8 +153,7 @@ func (g *Generator) fillDriver(c *Driver) {
 	c.PrimaryMaster.Addresses = g.getMasterAddresses()
 	c.PrimaryMaster.CellID = generateCellID(g.ytsaurus.Spec.PrimaryMasters.CellTag)
 
-	c.MasterCache.EnableMasterCacheDiscover = true
-	g.fillPrimaryMaster(&c.MasterCache.MasterCell)
+	c.MasterCache = g.getMasterCache()
 }
 
 func (g *Generator) fillAddressResolver(c *AddressResolver) {
@@ -141,6 +168,18 @@ func (g *Generator) fillAddressResolver(c *AddressResolver) {
 	c.Retries = &retries
 }
 
+func (g *Generator) getMasterCache() *MasterCache {
+	addr := g.getMasterCacheAddresses()
+	if len(addr) == 0 {
+		return nil
+	}
+	var c MasterCache
+	c.Addresses = addr
+	c.CellID = generateCellID(g.ytsaurus.Spec.MasterCaches.CellTag)
+	c.EnableMasterCacheDiscover = false
+	return &c
+}
+
 func (g *Generator) fillPrimaryMaster(c *MasterCell) {
 	c.Addresses = g.getMasterAddresses()
 	c.Peers = g.getMasterHydraPeers()
@@ -149,6 +188,7 @@ func (g *Generator) fillPrimaryMaster(c *MasterCell) {
 
 func (g *Generator) fillClusterConnection(c *ClusterConnection, s *ytv1.RPCTransportSpec) {
 	g.fillPrimaryMaster(&c.PrimaryMaster)
+	c.MasterCache = g.getMasterCache()
 	c.ClusterName = g.ytsaurus.Name
 	c.DiscoveryConnection.Addresses = g.getDiscoveryAddresses()
 	g.fillClusterConnectionEncryption(c, s)
@@ -312,6 +352,40 @@ func (g *Generator) getMasterConfigImpl() (MasterServer, error) {
 
 func (g *Generator) GetMasterConfig() ([]byte, error) {
 	c, err := g.getMasterConfigImpl()
+	if err != nil {
+		return nil, err
+	}
+	return marshallYsonConfig(c)
+}
+
+func (g *Generator) getMasterCacheConfigImpl() (MasterCacheServer, error) {
+	spec := &g.ytsaurus.Spec.MasterCaches
+	c, err := getMasterCacheServerCarcass(spec)
+	if err != nil {
+		return MasterCacheServer{}, err
+	}
+	g.fillCommonService(&c.CommonServer, &spec.InstanceSpec)
+	g.fillBusServer(&c.CommonServer, spec.NativeTransport)
+	g.fillPrimaryMaster(&c.PrimaryMaster)
+
+	// COMPAT(l0kix2): remove that after we drop support for specifying host network without master host addresses.
+	if g.ytsaurus.Spec.HostNetwork && len(spec.HostAddresses) == 0 {
+		// Each master deduces its index within cell by looking up his FQDN in the
+		// list of all master peers. Master peers are specified using their pod addresses,
+		// therefore we must also switch masters from identifying themselves by FQDN addresses
+		// to their pod addresses.
+
+		// POD_NAME is set to pod name through downward API env var and substituted during
+		// config postprocessing.
+		c.AddressResolver.LocalhostNameOverride = ptr.String(
+			fmt.Sprintf("%v.%v", "{K8S_POD_NAME}", g.getMasterPodFqdnSuffix()))
+	}
+
+	return c, nil
+}
+
+func (g *Generator) GetMasterCacheConfig() ([]byte, error) {
+	c, err := g.getMasterCacheConfigImpl()
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ const YTMetricsLabelName = "yt_metrics"
 const (
 	YTComponentLabelDiscovery       string = "yt-discovery"
 	YTComponentLabelMaster          string = "yt-master"
+	YTComponentLabelMasterCache     string = "yt-master-cache"
 	YTComponentLabelScheduler       string = "yt-scheduler"
 	YTComponentLabelControllerAgent string = "yt-controller-agent"
 	YTComponentLabelDataNode        string = "yt-data-node"

@@ -126,6 +126,23 @@ func (r *Ytsaurus) validateSecondaryMasters(old *runtime.Object) field.ErrorList
 	return allErrors
 }
 
+func (r *Ytsaurus) validateMasterCaches(old *runtime.Object) field.ErrorList {
+	var allErrors field.ErrorList
+
+	path := field.NewPath("spec").Child("masterCaches")
+	allErrors = append(allErrors, r.validateInstanceSpec(r.Spec.MasterCaches.InstanceSpec, path)...)
+
+	if old != nil {
+		oldYtsaurus := (*old).(*Ytsaurus)
+
+		if oldYtsaurus.Spec.MasterCaches.CellTag != r.Spec.MasterCaches.CellTag {
+			allErrors = append(allErrors, field.Invalid(path.Child("cellTag"), r.Spec.MasterCaches.CellTag, "Could not be changed"))
+		}
+	}
+
+	return allErrors
+}
+
 func (r *Ytsaurus) validateHostAddresses(masterSpec MastersSpec, fieldPath *field.Path) field.ErrorList {
 	var allErrors field.ErrorList
 
@@ -460,6 +477,7 @@ func (r *Ytsaurus) validateYtsaurus(old *runtime.Object) field.ErrorList {
 	allErrors = append(allErrors, r.validateDiscovery(old)...)
 	allErrors = append(allErrors, r.validatePrimaryMasters(old)...)
 	allErrors = append(allErrors, r.validateSecondaryMasters(old)...)
+	allErrors = append(allErrors, r.validateMasterCaches(old)...)
 	allErrors = append(allErrors, r.validateHTTPProxies(old)...)
 	allErrors = append(allErrors, r.validateRPCProxies(old)...)
 	allErrors = append(allErrors, r.validateTCPProxies(old)...)
