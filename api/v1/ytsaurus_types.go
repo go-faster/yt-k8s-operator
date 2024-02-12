@@ -249,9 +249,6 @@ type MasterCachesSpec struct {
 
 	HostAddresses    []string `json:"hostAddresses,omitempty"`
 	HostAddressLabel string   `json:"hostAddressLabel,omitempty"`
-
-	MaxSnapshotCountToKeep  *int `json:"maxSnapshotCountToKeep,omitempty"`
-	MaxChangelogCountToKeep *int `json:"maxChangelogCountToKeep,omitempty"`
 }
 
 type HTTPTransportSpec struct {

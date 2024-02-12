@@ -11851,10 +11851,6 @@ spec:
                           type: string
                       type: object
                     type: array
-                  maxChangelogCountToKeep:
-                    type: integer
-                  maxSnapshotCountToKeep:
-                    type: integer
                   minReadyInstanceCount:
                     type: integer
                   nativeTransport:
