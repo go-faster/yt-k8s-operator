@@ -18,6 +18,8 @@ const (
 )
 
 func Assert(t *testing.T, data []byte) {
+	t.Helper()
+
 	canonFilePath := getCanonFilePath(t)
 
 	if isCanonizeNeeded() {

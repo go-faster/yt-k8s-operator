@@ -2,13 +2,15 @@ package controllers
 
 import (
 	"context"
+	"time"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	apiProxy "github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/components"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-	"time"
 )
 
 type ComponentManager struct {
@@ -38,6 +40,7 @@ func NewComponentManager(
 
 	d := components.NewDiscovery(cfgen, ytsaurus)
 	m := components.NewMaster(cfgen, ytsaurus)
+	mc := components.NewMasterCache(cfgen, ytsaurus)
 	var hps []components.Component
 	for _, hpSpec := range ytsaurus.GetResource().Spec.HTTPProxies {
 		hps = append(hps, components.NewHTTPProxy(cfgen, ytsaurus, m, hpSpec))
@@ -54,7 +57,7 @@ func NewComponentManager(
 	var s components.Component
 
 	allComponents := []components.Component{
-		d, m, yc,
+		d, m, yc, mc,
 	}
 	allComponents = append(allComponents, dnds...)
 	allComponents = append(allComponents, hps...)

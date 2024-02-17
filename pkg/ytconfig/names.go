@@ -2,6 +2,7 @@ package ytconfig
 
 import (
 	"fmt"
+
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 )
 
@@ -17,6 +18,8 @@ func (g *Generator) GetMastersStatefulSetName() string {
 	return g.getName("ms")
 }
 
+func (g *Generator) GetMasterCachesStatefulSetName() string { return g.getName("mc") }
+
 func (g *Generator) GetDiscoveryStatefulSetName() string {
 	return g.getName("ds")
 }
@@ -28,6 +31,8 @@ func (g *Generator) GetYQLAgentStatefulSetName() string {
 func (g *Generator) GetMastersServiceName() string {
 	return g.getName("masters")
 }
+
+func (g *Generator) GetMasterCachesServiceName() string { return g.getName("master-caches") }
 
 func (g *Generator) GetDiscoveryServiceName() string {
 	return g.getName("discovery")
@@ -41,6 +46,15 @@ func (g *Generator) GetMasterPodNames() []string {
 	podNames := make([]string, 0, g.ytsaurus.Spec.PrimaryMasters.InstanceSpec.InstanceCount)
 	for i := 0; i < int(g.ytsaurus.Spec.PrimaryMasters.InstanceSpec.InstanceCount); i++ {
 		podNames = append(podNames, fmt.Sprintf("%s-%d", g.GetMastersStatefulSetName(), i))
+	}
+
+	return podNames
+}
+
+func (g *Generator) GetMasterCachePodNames() []string {
+	podNames := make([]string, 0, g.ytsaurus.Spec.MasterCaches.InstanceSpec.InstanceCount)
+	for i := 0; i < int(g.ytsaurus.Spec.MasterCaches.InstanceSpec.InstanceCount); i++ {
+		podNames = append(podNames, fmt.Sprintf("%s-%d", g.GetMasterCachesStatefulSetName(), i))
 	}
 
 	return podNames
