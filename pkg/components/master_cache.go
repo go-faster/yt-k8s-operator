@@ -19,7 +19,8 @@ import (
 
 type masterCache struct {
 	componentBase
-	server server
+	server  server
+	initJob *InitJob
 }
 
 func NewMasterCache(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus) Component {
@@ -43,13 +44,25 @@ func NewMasterCache(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus) Comp
 		cfgen.GetMasterCachesServiceName(),
 		cfgen.GetMasterCacheConfig,
 	)
+	initJob := NewInitJob(
+		&l,
+		ytsaurus.APIProxy(),
+		ytsaurus,
+		resource.Spec.ImagePullSecrets,
+		"default",
+		consts.ClientConfigFileName,
+		resource.Spec.CoreImage,
+		cfgen.GetNativeClientConfig,
+	)
+
 	return &masterCache{
 		componentBase: componentBase{
 			labeller: &l,
 			ytsaurus: ytsaurus,
 			cfgen:    cfgen,
 		},
-		server: srv,
+		server:  srv,
+		initJob: initJob,
 	}
 }
 
@@ -60,6 +73,7 @@ func (m *masterCache) IsUpdatable() bool {
 func (m *masterCache) Fetch(ctx context.Context) error {
 	return resources.Fetch(ctx,
 		m.server,
+		m.initJob,
 	)
 }
 
@@ -120,8 +134,11 @@ func (m *masterCache) doSync(ctx context.Context, dry bool) (ComponentStatus, er
 	if !m.server.arePodsReady(ctx) {
 		return WaitingStatus(SyncStatusBlocked, "pods"), err
 	}
+	if !dry {
+		m.initJob.SetInitScript(m.createInitScript())
+	}
 
-	return SimpleStatus(SyncStatusReady), err
+	return m.initJob.Sync(ctx, dry)
 }
 
 func (m *masterCache) Status(ctx context.Context) ComponentStatus {
@@ -186,4 +203,20 @@ func (m *masterCache) getHostAddressLabel() string {
 		return primaryMastersSpec.HostAddressLabel
 	}
 	return defaultHostAddressLabel
+}
+
+func (m *masterCache) createInitScript() string {
+	clusterConnection, err := m.cfgen.GetClusterConnection()
+	if err != nil {
+		panic(err)
+	}
+
+	script := []string{
+		initJobWithNativeDriverPrologue(),
+		// TODO(ernado): provision lock?
+		fmt.Sprintf("/usr/bin/yt set //sys/@cluster_connection '%s'", string(clusterConnection)),
+		m.initMedia(),
+	}
+
+	return strings.Join(script, "\n")
 }
