@@ -41,6 +41,10 @@ func NewComponentManager(
 	d := components.NewDiscovery(cfgen, ytsaurus)
 	m := components.NewMaster(cfgen, ytsaurus)
 	mc := components.NewMasterCache(cfgen, ytsaurus)
+	var cells []components.Component
+	for _, spec := range ytsaurus.GetResource().Spec.SecondaryMasters {
+		cells = append(cells, components.NewMasterCell(cfgen, ytsaurus, &spec))
+	}
 	var hps []components.Component
 	for _, hpSpec := range ytsaurus.GetResource().Spec.HTTPProxies {
 		hps = append(hps, components.NewHTTPProxy(cfgen, ytsaurus, m, hpSpec))
@@ -59,6 +63,7 @@ func NewComponentManager(
 	allComponents := []components.Component{
 		d, m, yc, mc,
 	}
+	allComponents = append(allComponents, cells...)
 	allComponents = append(allComponents, dnds...)
 	allComponents = append(allComponents, hps...)
 

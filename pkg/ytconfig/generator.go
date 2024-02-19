@@ -323,8 +323,7 @@ func (g *Generator) GetChytInitClusterConfig() ([]byte, error) {
 	return marshallYsonConfig(c)
 }
 
-func (g *Generator) getMasterConfigImpl() (MasterServer, error) {
-	spec := &g.ytsaurus.Spec.PrimaryMasters
+func (g *Generator) getMasterConfig(spec *ytv1.MastersSpec) (MasterServer, error) {
 	c, err := getMasterServerCarcass(spec)
 	if err != nil {
 		return MasterServer{}, err
@@ -350,12 +349,16 @@ func (g *Generator) getMasterConfigImpl() (MasterServer, error) {
 	return c, nil
 }
 
-func (g *Generator) GetMasterConfig() ([]byte, error) {
-	c, err := g.getMasterConfigImpl()
+func (g *Generator) GetMasterCellConfig(spec *ytv1.MastersSpec) ([]byte, error) {
+	c, err := g.getMasterConfig(spec)
 	if err != nil {
 		return nil, err
 	}
 	return marshallYsonConfig(c)
+}
+
+func (g *Generator) GetMasterConfig() ([]byte, error) {
+	return g.GetMasterCellConfig(&g.ytsaurus.Spec.PrimaryMasters)
 }
 
 func (g *Generator) getMasterCacheConfigImpl() (MasterCacheServer, error) {

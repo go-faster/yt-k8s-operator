@@ -14,6 +14,10 @@ func (g *Generator) getName(shortName string) string {
 	}
 }
 
+func (g *Generator) GetMasterCellStatefulSetName(tag int16) string {
+	return g.getName(fmt.Sprintf("mcl-%x", tag))
+}
+
 func (g *Generator) GetMastersStatefulSetName() string {
 	return g.getName("ms")
 }
@@ -33,6 +37,10 @@ func (g *Generator) GetMastersServiceName() string {
 }
 
 func (g *Generator) GetMasterCachesServiceName() string { return g.getName("master-caches") }
+
+func (g *Generator) GetMasterCellServiceName(tag int16) string {
+	return g.getName(fmt.Sprintf("master-cell-%x", tag))
+}
 
 func (g *Generator) GetDiscoveryServiceName() string {
 	return g.getName("discovery")
