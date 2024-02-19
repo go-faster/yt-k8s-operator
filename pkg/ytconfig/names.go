@@ -3,6 +3,7 @@ package ytconfig
 import (
 	"fmt"
 
+	v1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 )
 
@@ -63,6 +64,15 @@ func (g *Generator) GetMasterCachePodNames() []string {
 	podNames := make([]string, 0, g.ytsaurus.Spec.MasterCaches.InstanceSpec.InstanceCount)
 	for i := 0; i < int(g.ytsaurus.Spec.MasterCaches.InstanceSpec.InstanceCount); i++ {
 		podNames = append(podNames, fmt.Sprintf("%s-%d", g.GetMasterCachesStatefulSetName(), i))
+	}
+
+	return podNames
+}
+
+func (g *Generator) GetMasterCellPodNames(spec v1.MastersSpec) []string {
+	podNames := make([]string, 0, spec.InstanceSpec.InstanceCount)
+	for i := 0; i < int(spec.InstanceSpec.InstanceCount); i++ {
+		podNames = append(podNames, fmt.Sprintf("%s-%d", g.GetMasterCellStatefulSetName(spec.CellTag), i))
 	}
 
 	return podNames
