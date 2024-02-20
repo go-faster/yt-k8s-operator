@@ -16,7 +16,7 @@ func (g *Generator) getName(shortName string) string {
 }
 
 func (g *Generator) GetMasterCellStatefulSetName(tag int16) string {
-	return g.getName(fmt.Sprintf("sm-%d", tag))
+	return g.getName(fmt.Sprintf("sm-%x", tag))
 }
 
 func (g *Generator) GetMastersStatefulSetName() string {
@@ -40,7 +40,7 @@ func (g *Generator) GetMastersServiceName() string {
 func (g *Generator) GetMasterCachesServiceName() string { return g.getName("master-caches") }
 
 func (g *Generator) GetSecondaryMastersServiceName(tag int16) string {
-	return g.getName(fmt.Sprintf("secondary-masters-%d", tag))
+	return g.getName(fmt.Sprintf("secondary-masters-%x", tag))
 }
 
 func (g *Generator) GetDiscoveryServiceName() string {
