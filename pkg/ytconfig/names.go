@@ -3,6 +3,7 @@ package ytconfig
 import (
 	"fmt"
 
+	v1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 )
 
@@ -12,6 +13,10 @@ func (g *Generator) getName(shortName string) string {
 	} else {
 		return fmt.Sprintf("%s-%s", shortName, g.ytsaurus.Name)
 	}
+}
+
+func (g *Generator) GetMasterCellStatefulSetName(tag int16) string {
+	return g.getName(fmt.Sprintf("sm-%d", tag))
 }
 
 func (g *Generator) GetMastersStatefulSetName() string {
@@ -34,6 +39,10 @@ func (g *Generator) GetMastersServiceName() string {
 
 func (g *Generator) GetMasterCachesServiceName() string { return g.getName("master-caches") }
 
+func (g *Generator) GetSecondaryMastersServiceName(tag int16) string {
+	return g.getName(fmt.Sprintf("secondary-masters-%d", tag))
+}
+
 func (g *Generator) GetDiscoveryServiceName() string {
 	return g.getName("discovery")
 }
@@ -55,6 +64,15 @@ func (g *Generator) GetMasterCachePodNames() []string {
 	podNames := make([]string, 0, g.ytsaurus.Spec.MasterCaches.InstanceSpec.InstanceCount)
 	for i := 0; i < int(g.ytsaurus.Spec.MasterCaches.InstanceSpec.InstanceCount); i++ {
 		podNames = append(podNames, fmt.Sprintf("%s-%d", g.GetMasterCachesStatefulSetName(), i))
+	}
+
+	return podNames
+}
+
+func (g *Generator) GetSecondaryMastersPodNames(spec v1.MastersSpec) []string {
+	podNames := make([]string, 0, spec.InstanceSpec.InstanceCount)
+	for i := 0; i < int(spec.InstanceSpec.InstanceCount); i++ {
+		podNames = append(podNames, fmt.Sprintf("%s-%d", g.GetMasterCellStatefulSetName(spec.CellTag), i))
 	}
 
 	return podNames

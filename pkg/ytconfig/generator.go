@@ -77,6 +77,32 @@ func (g *Generator) getMasterPodFqdnSuffix() string {
 		g.clusterDomain)
 }
 
+func (g *Generator) getSecondaryMasterPodFQDNSuffix(spec ytv1.MastersSpec) string {
+	return fmt.Sprintf("%s.%s.svc.%s",
+		g.GetSecondaryMastersServiceName(spec.CellTag),
+		g.ytsaurus.Namespace,
+		g.clusterDomain,
+	)
+}
+
+func (g *Generator) getSecondaryMasterAddresses(spec ytv1.MastersSpec) []string {
+	hosts := spec.HostAddresses
+	if len(hosts) == 0 {
+		masterPodSuffix := g.getSecondaryMasterPodFQDNSuffix(spec)
+		for _, podName := range g.GetSecondaryMastersPodNames(spec) {
+			hosts = append(hosts, fmt.Sprintf("%s.%s",
+				podName,
+				masterPodSuffix,
+			))
+		}
+	}
+	addresses := make([]string, len(hosts))
+	for idx, host := range hosts {
+		addresses[idx] = fmt.Sprintf("%s:%d", host, consts.MasterRPCPort)
+	}
+	return addresses
+}
+
 func (g *Generator) getMasterAddresses() []string {
 	hosts := g.ytsaurus.Spec.PrimaryMasters.HostAddresses
 
@@ -100,6 +126,17 @@ func (g *Generator) getMasterAddresses() []string {
 func (g *Generator) getMasterHydraPeers() []HydraPeer {
 	peers := make([]HydraPeer, 0, g.ytsaurus.Spec.PrimaryMasters.InstanceCount)
 	for _, address := range g.getMasterAddresses() {
+		peers = append(peers, HydraPeer{
+			Address: address,
+			Voting:  true,
+		})
+	}
+	return peers
+}
+
+func (g *Generator) getSecondaryMasterHydraPeers(spec ytv1.MastersSpec) []HydraPeer {
+	peers := make([]HydraPeer, 0, spec.InstanceCount)
+	for _, address := range g.getSecondaryMasterAddresses(spec) {
 		peers = append(peers, HydraPeer{
 			Address: address,
 			Voting:  true,
@@ -186,8 +223,21 @@ func (g *Generator) fillPrimaryMaster(c *MasterCell) {
 	c.CellID = generateCellID(g.ytsaurus.Spec.PrimaryMasters.CellTag)
 }
 
+func (g *Generator) getSecondaryMasters() []MasterCell {
+	var cells []MasterCell
+	for _, spec := range g.ytsaurus.Spec.SecondaryMasters {
+		c := MasterCell{}
+		c.Addresses = g.getSecondaryMasterAddresses(spec)
+		c.CellID = generateCellID(spec.CellTag)
+		c.Peers = g.getSecondaryMasterHydraPeers(spec)
+		cells = append(cells, c)
+	}
+	return cells
+}
+
 func (g *Generator) fillClusterConnection(c *ClusterConnection, s *ytv1.RPCTransportSpec) {
 	g.fillPrimaryMaster(&c.PrimaryMaster)
+	c.SecondaryMasters = g.getSecondaryMasters()
 	c.MasterCache = g.getMasterCache()
 	c.ClusterName = g.ytsaurus.Name
 	c.DiscoveryConnection.Addresses = g.getDiscoveryAddresses()
@@ -323,8 +373,7 @@ func (g *Generator) GetChytInitClusterConfig() ([]byte, error) {
 	return marshallYsonConfig(c)
 }
 
-func (g *Generator) getMasterConfigImpl() (MasterServer, error) {
-	spec := &g.ytsaurus.Spec.PrimaryMasters
+func (g *Generator) getMasterConfig(spec *ytv1.MastersSpec) (MasterServer, error) {
 	c, err := getMasterServerCarcass(spec)
 	if err != nil {
 		return MasterServer{}, err
@@ -332,6 +381,7 @@ func (g *Generator) getMasterConfigImpl() (MasterServer, error) {
 	g.fillCommonService(&c.CommonServer, &spec.InstanceSpec)
 	g.fillBusServer(&c.CommonServer, spec.NativeTransport)
 	g.fillPrimaryMaster(&c.PrimaryMaster)
+	c.SecondaryMasters = g.getSecondaryMasters()
 	configureMasterServerCypressManager(g.ytsaurus.Spec, &c.CypressManager)
 
 	// COMPAT(l0kix2): remove that after we drop support for specifying host network without master host addresses.
@@ -350,12 +400,16 @@ func (g *Generator) getMasterConfigImpl() (MasterServer, error) {
 	return c, nil
 }
 
-func (g *Generator) GetMasterConfig() ([]byte, error) {
-	c, err := g.getMasterConfigImpl()
+func (g *Generator) GetMasterCellConfig(spec *ytv1.MastersSpec) ([]byte, error) {
+	c, err := g.getMasterConfig(spec)
 	if err != nil {
 		return nil, err
 	}
 	return marshallYsonConfig(c)
+}
+
+func (g *Generator) GetMasterConfig() ([]byte, error) {
+	return g.GetMasterCellConfig(&g.ytsaurus.Spec.PrimaryMasters)
 }
 
 func (g *Generator) getMasterCacheConfigImpl() (MasterCacheServer, error) {
