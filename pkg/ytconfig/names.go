@@ -16,7 +16,7 @@ func (g *Generator) getName(shortName string) string {
 }
 
 func (g *Generator) GetMasterCellStatefulSetName(tag int16) string {
-	return g.getName(fmt.Sprintf("mcl-%x", tag))
+	return g.getName(fmt.Sprintf("sm-%d", tag))
 }
 
 func (g *Generator) GetMastersStatefulSetName() string {
@@ -39,8 +39,8 @@ func (g *Generator) GetMastersServiceName() string {
 
 func (g *Generator) GetMasterCachesServiceName() string { return g.getName("master-caches") }
 
-func (g *Generator) GetMasterCellServiceName(tag int16) string {
-	return g.getName(fmt.Sprintf("master-cell-%x", tag))
+func (g *Generator) GetSecondaryMastersServiceName(tag int16) string {
+	return g.getName(fmt.Sprintf("secondary-masters-%d", tag))
 }
 
 func (g *Generator) GetDiscoveryServiceName() string {
@@ -69,7 +69,7 @@ func (g *Generator) GetMasterCachePodNames() []string {
 	return podNames
 }
 
-func (g *Generator) GetMasterCellPodNames(spec v1.MastersSpec) []string {
+func (g *Generator) GetSecondaryMastersPodNames(spec v1.MastersSpec) []string {
 	podNames := make([]string, 0, spec.InstanceSpec.InstanceCount)
 	for i := 0; i < int(spec.InstanceSpec.InstanceCount); i++ {
 		podNames = append(podNames, fmt.Sprintf("%s-%d", g.GetMasterCellStatefulSetName(spec.CellTag), i))

@@ -7,7 +7,7 @@ const (
 	YTComponentLabelDiscovery       string = "yt-discovery"
 	YTComponentLabelMaster          string = "yt-master"
 	YTComponentLabelMasterCache     string = "yt-master-cache"
-	YTComponentLabelMasterCell      string = "yt-master-cell"
+	YTComponentLabelSecondaryMaster string = "yt-secondary-master"
 	YTComponentLabelScheduler       string = "yt-scheduler"
 	YTComponentLabelControllerAgent string = "yt-controller-agent"
 	YTComponentLabelDataNode        string = "yt-data-node"

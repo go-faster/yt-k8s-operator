@@ -77,19 +77,19 @@ func (g *Generator) getMasterPodFqdnSuffix() string {
 		g.clusterDomain)
 }
 
-func (g *Generator) getMasterCellPodFQDNSuffix(spec ytv1.MastersSpec) string {
+func (g *Generator) getSecondaryMasterPodFQDNSuffix(spec ytv1.MastersSpec) string {
 	return fmt.Sprintf("%s.%s.svc.%s",
-		g.GetMasterCellServiceName(spec.CellTag),
+		g.GetSecondaryMastersServiceName(spec.CellTag),
 		g.ytsaurus.Namespace,
 		g.clusterDomain,
 	)
 }
 
-func (g *Generator) getMasterCellAddresses(spec ytv1.MastersSpec) []string {
+func (g *Generator) getSecondaryMasterAddresses(spec ytv1.MastersSpec) []string {
 	hosts := spec.HostAddresses
 	if len(hosts) == 0 {
-		masterPodSuffix := g.getMasterCellPodFQDNSuffix(spec)
-		for _, podName := range g.GetMasterCellPodNames(spec) {
+		masterPodSuffix := g.getSecondaryMasterPodFQDNSuffix(spec)
+		for _, podName := range g.GetSecondaryMastersPodNames(spec) {
 			hosts = append(hosts, fmt.Sprintf("%s.%s",
 				podName,
 				masterPodSuffix,
@@ -134,9 +134,9 @@ func (g *Generator) getMasterHydraPeers() []HydraPeer {
 	return peers
 }
 
-func (g *Generator) getMasterCellHydraPeers(spec ytv1.MastersSpec) []HydraPeer {
+func (g *Generator) getSecondaryMasterHydraPeers(spec ytv1.MastersSpec) []HydraPeer {
 	peers := make([]HydraPeer, 0, spec.InstanceCount)
-	for _, address := range g.getMasterCellAddresses(spec) {
+	for _, address := range g.getSecondaryMasterAddresses(spec) {
 		peers = append(peers, HydraPeer{
 			Address: address,
 			Voting:  true,
@@ -227,9 +227,9 @@ func (g *Generator) getSecondaryMasters() []MasterCell {
 	var cells []MasterCell
 	for _, spec := range g.ytsaurus.Spec.SecondaryMasters {
 		c := MasterCell{}
-		c.Addresses = g.getMasterCellAddresses(spec)
+		c.Addresses = g.getSecondaryMasterAddresses(spec)
 		c.CellID = generateCellID(spec.CellTag)
-		c.Peers = g.getMasterCellHydraPeers(spec)
+		c.Peers = g.getSecondaryMasterHydraPeers(spec)
 		cells = append(cells, c)
 	}
 	return cells

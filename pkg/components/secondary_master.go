@@ -18,22 +18,23 @@ import (
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
 )
 
-type masterCell struct {
+type secondaryMaster struct {
 	componentBase
 	server server
 
 	initJob          *InitJob
 	exitReadOnlyJob  *InitJob
 	adminCredentials corev1.Secret
+	spec             *ytv1.MastersSpec
 }
 
-func NewMasterCell(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, spec *ytv1.MastersSpec) Component {
+func NewSecondaryMaster(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, spec *ytv1.MastersSpec) Component {
 	resource := ytsaurus.GetResource()
 	l := labeller.Labeller{
 		ObjectMeta:     &resource.ObjectMeta,
 		APIProxy:       ytsaurus.APIProxy(),
-		ComponentLabel: consts.YTComponentLabelMasterCell,
-		ComponentName:  "MasterCell",
+		ComponentLabel: consts.YTComponentLabelSecondaryMaster,
+		ComponentName:  "SecondaryMaster",
 		MonitoringPort: consts.MasterMonitoringPort,
 		Annotations:    resource.Spec.ExtraPodAnnotations,
 	}
@@ -45,7 +46,7 @@ func NewMasterCell(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, spec 
 		"/usr/bin/ytserver-master",
 		"ytserver-master.yson",
 		cfgen.GetMasterCellStatefulSetName(spec.CellTag),
-		cfgen.GetMasterCellServiceName(spec.CellTag),
+		cfgen.GetSecondaryMastersServiceName(spec.CellTag),
 		func() ([]byte, error) { return cfgen.GetMasterCellConfig(spec) },
 	)
 	initJob := NewInitJob(
@@ -59,7 +60,7 @@ func NewMasterCell(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, spec 
 		cfgen.GetNativeClientConfig,
 	)
 
-	return &masterCell{
+	return &secondaryMaster{
 		componentBase: componentBase{
 			labeller: &l,
 			ytsaurus: ytsaurus,
@@ -67,20 +68,20 @@ func NewMasterCell(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, spec 
 		},
 		initJob: initJob,
 		server:  srv,
+		spec:    spec,
 	}
 }
 
-func (m *masterCell) IsUpdatable() bool {
+func (m *secondaryMaster) IsUpdatable() bool {
 	return true
 }
 
-func (m *masterCell) Fetch(ctx context.Context) error {
+func (m *secondaryMaster) Fetch(ctx context.Context) error {
 	if m.ytsaurus.GetResource().Spec.AdminCredentials != nil {
-		err := m.ytsaurus.APIProxy().FetchObject(
-			ctx,
+		if err := m.ytsaurus.APIProxy().FetchObject(ctx,
 			m.ytsaurus.GetResource().Spec.AdminCredentials.Name,
-			&m.adminCredentials)
-		if err != nil {
+			&m.adminCredentials,
+		); err != nil {
 			return err
 		}
 	}
@@ -91,29 +92,7 @@ func (m *masterCell) Fetch(ctx context.Context) error {
 	)
 }
 
-func (m *masterCell) getExtraMedia() []Medium {
-	mediaMap := make(map[string]Medium)
-
-	for _, d := range m.ytsaurus.GetResource().Spec.DataNodes {
-		for _, l := range d.Locations {
-			if l.Medium == consts.DefaultMedium {
-				continue
-			}
-			mediaMap[l.Medium] = Medium{
-				Name: l.Medium,
-			}
-		}
-	}
-
-	mediaSlice := make([]Medium, 0, len(mediaMap))
-	for _, v := range mediaMap {
-		mediaSlice = append(mediaSlice, v)
-	}
-
-	return mediaSlice
-}
-
-func (m *masterCell) createInitScript() string {
+func (m *secondaryMaster) createInitScript() string {
 	clusterConnection, err := m.cfgen.GetClusterConnection()
 	if err != nil {
 		panic(err)
@@ -127,7 +106,7 @@ func (m *masterCell) createInitScript() string {
 	return strings.Join(script, "\n")
 }
 
-func (m *masterCell) doSync(ctx context.Context, dry bool) (ComponentStatus, error) {
+func (m *secondaryMaster) doSync(ctx context.Context, dry bool) (ComponentStatus, error) {
 	var err error
 
 	if ytv1.IsReadyToUpdateClusterState(m.ytsaurus.GetClusterState()) && m.server.needUpdate() {
@@ -162,7 +141,7 @@ func (m *masterCell) doSync(ctx context.Context, dry bool) (ComponentStatus, err
 	return m.initJob.Sync(ctx, dry)
 }
 
-func (m *masterCell) Status(ctx context.Context) ComponentStatus {
+func (m *secondaryMaster) Status(ctx context.Context) ComponentStatus {
 	status, err := m.doSync(ctx, true)
 	if err != nil {
 		panic(err)
@@ -171,20 +150,19 @@ func (m *masterCell) Status(ctx context.Context) ComponentStatus {
 	return status
 }
 
-func (m *masterCell) Sync(ctx context.Context) error {
+func (m *secondaryMaster) Sync(ctx context.Context) error {
 	_, err := m.doSync(ctx, false)
 	return err
 }
 
-func (m *masterCell) doServerSync(ctx context.Context) error {
+func (m *secondaryMaster) doServerSync(ctx context.Context) error {
 	statefulSet := m.server.buildStatefulSet()
 	m.addAffinity(statefulSet)
 	return m.server.Sync(ctx)
 }
 
-func (m *masterCell) addAffinity(statefulSet *appsv1.StatefulSet) {
-	primaryMastersSpec := m.ytsaurus.GetResource().Spec.PrimaryMasters
-	if len(primaryMastersSpec.HostAddresses) == 0 {
+func (m *secondaryMaster) addAffinity(statefulSet *appsv1.StatefulSet) {
+	if len(m.spec.HostAddresses) == 0 {
 		return
 	}
 
@@ -209,7 +187,7 @@ func (m *masterCell) addAffinity(statefulSet *appsv1.StatefulSet) {
 			{
 				Key:      nodeHostnameLabel,
 				Operator: corev1.NodeSelectorOpIn,
-				Values:   primaryMastersSpec.HostAddresses,
+				Values:   m.spec.HostAddresses,
 			},
 		},
 	})
@@ -218,15 +196,14 @@ func (m *masterCell) addAffinity(statefulSet *appsv1.StatefulSet) {
 	statefulSet.Spec.Template.Spec.Affinity = affinity
 }
 
-func (m *masterCell) getHostAddressLabel() string {
-	primaryMastersSpec := m.ytsaurus.GetResource().Spec.PrimaryMasters
-	if primaryMastersSpec.HostAddressLabel != "" {
-		return primaryMastersSpec.HostAddressLabel
+func (m *secondaryMaster) getHostAddressLabel() string {
+	if m.spec.HostAddressLabel != "" {
+		return m.spec.HostAddressLabel
 	}
 	return defaultHostAddressLabel
 }
 
-func (m *masterCell) exitReadOnly(ctx context.Context, dry bool) (*ComponentStatus, error) {
+func (m *secondaryMaster) exitReadOnly(ctx context.Context, dry bool) (*ComponentStatus, error) {
 	if !m.ytsaurus.IsUpdateStatusConditionTrue(consts.ConditionMasterExitReadOnlyPrepared) {
 		if !m.exitReadOnlyJob.isRestartPrepared() {
 			if err := m.exitReadOnlyJob.prepareRestart(ctx, dry); err != nil {
@@ -252,7 +229,7 @@ func (m *masterCell) exitReadOnly(ctx context.Context, dry bool) (*ComponentStat
 	return ptr.T(SimpleStatus(SyncStatusUpdating)), nil
 }
 
-func (m *masterCell) setMasterReadOnlyExitPrepared(ctx context.Context, status metav1.ConditionStatus) {
+func (m *secondaryMaster) setMasterReadOnlyExitPrepared(ctx context.Context, status metav1.ConditionStatus) {
 	m.ytsaurus.SetUpdateStatusCondition(ctx, metav1.Condition{
 		Type:    consts.ConditionMasterExitReadOnlyPrepared,
 		Status:  status,
