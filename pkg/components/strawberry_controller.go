@@ -6,13 +6,14 @@ import (
 	"path"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+
 	ytv1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/resources"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type strawberryController struct {
@@ -55,12 +56,21 @@ func NewStrawberryController(
 			image = *resource.Spec.DeprecatedChytController.Image
 		}
 	}
-	if resource.Spec.StrawberryController != nil {
+	spec := resource.Spec.DeprecatedChytController
+	var (
+		tolerations  []corev1.Toleration
+		affinity     *corev1.Affinity
+		nodeSelector map[string]string
+	)
+	if spec != nil {
 		name = "strawberry"
 		componentName = "StrawberryController"
 		if resource.Spec.StrawberryController.Image != nil {
 			image = *resource.Spec.StrawberryController.Image
 		}
+		tolerations = spec.Tolerations
+		affinity = spec.Affinity
+		nodeSelector = spec.NodeSelector
 	}
 
 	l := labeller.Labeller{
@@ -71,7 +81,7 @@ func NewStrawberryController(
 		Annotations:    resource.Spec.ExtraPodAnnotations,
 	}
 
-	microservice := newMicroservice(
+	svc := newMicroservice(
 		&l,
 		ytsaurus,
 		image,
@@ -82,8 +92,12 @@ func NewStrawberryController(
 				Fmt: ytconfig.ConfigFormatYson,
 			},
 		},
+		tolerations,
+		affinity,
+		nodeSelector,
 		fmt.Sprintf("%s-controller", name),
-		name)
+		name,
+	)
 
 	return &strawberryController{
 		componentBase: componentBase{
@@ -91,29 +105,34 @@ func NewStrawberryController(
 			ytsaurus: ytsaurus,
 			cfgen:    cfgen,
 		},
-		microservice: microservice,
+		microservice: svc,
 		initUserAndUrlJob: NewInitJob(
 			&l,
+			ytsaurus.GetJobs(),
 			ytsaurus.APIProxy(),
 			ytsaurus,
 			ytsaurus.GetResource().Spec.ImagePullSecrets,
 			"user",
 			consts.ClientConfigFileName,
 			resource.Spec.CoreImage,
-			cfgen.GetNativeClientConfig),
+			cfgen.GetNativeClientConfig,
+		),
 		initChytClusterJob: NewInitJob(
 			&l,
+			ytsaurus.GetJobs(),
 			ytsaurus.APIProxy(),
 			ytsaurus,
 			resource.Spec.ImagePullSecrets,
 			"cluster",
 			ChytInitClusterJobConfigFileName,
 			image,
-			cfgen.GetChytInitClusterConfig),
+			cfgen.GetChytInitClusterConfig,
+		),
 		secret: resources.NewStringSecret(
 			l.GetSecretName(),
 			&l,
-			ytsaurus.APIProxy()),
+			ytsaurus.APIProxy(),
+		),
 		name:      name,
 		master:    master,
 		scheduler: scheduler,

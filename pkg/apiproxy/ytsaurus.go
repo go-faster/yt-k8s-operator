@@ -30,6 +30,10 @@ func NewYtsaurus(
 	}
 }
 
+func (c *Ytsaurus) GetJobs() *ytv1.JobsSpec {
+	return c.ytsaurus.Spec.Jobs
+}
+
 func (c *Ytsaurus) APIProxy() APIProxy {
 	return c.apiProxy
 }

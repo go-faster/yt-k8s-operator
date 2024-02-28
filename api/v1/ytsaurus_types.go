@@ -391,6 +391,10 @@ type UISpec struct {
 	Theme       string  `json:"theme,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Group       *string `json:"group,omitempty"`
+
+	Tolerations  []corev1.Toleration `json:"tolerations,omitempty"`
+	Affinity     *corev1.Affinity    `json:"affinity,omitempty"`
+	NodeSelector map[string]string   `json:"nodeSelector,omitempty"`
 }
 
 type QueryTrackerSpec struct {
@@ -398,8 +402,11 @@ type QueryTrackerSpec struct {
 }
 
 type StrawberryControllerSpec struct {
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
-	Image     *string                     `json:"image,omitempty"`
+	Resources    corev1.ResourceRequirements `json:"resources,omitempty"`
+	Image        *string                     `json:"image,omitempty"`
+	Tolerations  []corev1.Toleration         `json:"tolerations,omitempty"`
+	Affinity     *corev1.Affinity            `json:"affinity,omitempty"`
+	NodeSelector map[string]string           `json:"nodeSelector,omitempty"`
 }
 
 type YQLAgentSpec struct {
@@ -484,6 +491,14 @@ type YtsaurusSpec struct {
 	QueueAgents              *QueueAgentSpec           `json:"queueAgents,omitempty"`
 
 	UI *UISpec `json:"ui,omitempty"`
+
+	Jobs *JobsSpec `json:"jobs,omitempty"`
+}
+
+type JobsSpec struct {
+	Tolerations  []corev1.Toleration `json:"tolerations,omitempty"`
+	Affinity     *corev1.Affinity    `json:"affinity,omitempty"`
+	NodeSelector map[string]string   `json:"nodeSelector,omitempty"`
 }
 
 type ClusterState string

@@ -7,12 +7,13 @@ import (
 
 	ytv1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/resources"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Chyt struct {
@@ -48,6 +49,7 @@ func NewChyt(
 		ytsaurus: ytsaurus,
 		initUser: NewInitJob(
 			&l,
+			ytsaurus.Spec.Jobs,
 			chyt.APIProxy(),
 			chyt,
 			ytsaurus.Spec.ImagePullSecrets,
@@ -57,6 +59,7 @@ func NewChyt(
 			cfgen.GetNativeClientConfig),
 		initEnvironment: NewInitJob(
 			&l,
+			ytsaurus.Spec.Jobs,
 			chyt.APIProxy(),
 			chyt,
 			ytsaurus.Spec.ImagePullSecrets,
@@ -66,6 +69,7 @@ func NewChyt(
 			cfgen.GetNativeClientConfig),
 		initChPublicJob: NewInitJob(
 			&l,
+			ytsaurus.Spec.Jobs,
 			chyt.APIProxy(),
 			chyt,
 			ytsaurus.Spec.ImagePullSecrets,

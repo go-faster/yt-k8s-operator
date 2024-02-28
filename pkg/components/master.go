@@ -3,8 +3,9 @@ package components
 import (
 	"context"
 	"fmt"
-	"go.ytsaurus.tech/yt/go/yt"
 	"strings"
+
+	"go.ytsaurus.tech/yt/go/yt"
 
 	"go.ytsaurus.tech/library/go/ptr"
 	"go.ytsaurus.tech/yt/go/yson"
@@ -59,6 +60,7 @@ func NewMaster(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus) Component
 
 	initJob := NewInitJob(
 		&l,
+		ytsaurus.GetJobs(),
 		ytsaurus.APIProxy(),
 		ytsaurus,
 		resource.Spec.ImagePullSecrets,
@@ -69,6 +71,7 @@ func NewMaster(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus) Component
 
 	exitReadOnlyJob := NewInitJob(
 		&l,
+		ytsaurus.GetJobs(),
 		ytsaurus.APIProxy(),
 		ytsaurus,
 		resource.Spec.ImagePullSecrets,

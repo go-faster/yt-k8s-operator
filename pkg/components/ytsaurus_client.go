@@ -59,6 +59,7 @@ func NewYtsaurusClient(
 		httpProxy: httpProxy,
 		initUserJob: NewInitJob(
 			&l,
+			ytsaurus.GetJobs(),
 			ytsaurus.APIProxy(),
 			ytsaurus,
 			ytsaurus.GetResource().Spec.ImagePullSecrets,

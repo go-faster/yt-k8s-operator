@@ -6,14 +6,15 @@ import (
 	"path"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	ytv1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/resources"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 type UI struct {
@@ -27,26 +28,31 @@ type UI struct {
 const UIClustersConfigFileName = "clusters-config.json"
 const UICustomConfigFileName = "common.js"
 
-func NewUI(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master Component) Component {
-	resource := ytsaurus.GetResource()
+func NewUI(
+	cfgen *ytconfig.Generator,
+	ytsaurus *apiproxy.Ytsaurus,
+	master Component,
+) Component {
+	res := ytsaurus.GetResource()
 	l := labeller.Labeller{
-		ObjectMeta:     &resource.ObjectMeta,
+		ObjectMeta:     &res.ObjectMeta,
 		APIProxy:       ytsaurus.APIProxy(),
 		ComponentLabel: consts.YTComponentLabelUI,
 		ComponentName:  "UI",
-		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Annotations:    res.Spec.ExtraPodAnnotations,
 	}
 
-	image := resource.Spec.UIImage
-	if resource.Spec.UI.Image != nil {
-		image = *resource.Spec.UI.Image
+	spec := res.Spec.UI
+	image := res.Spec.UIImage
+	if spec.Image != nil {
+		image = *spec.Image
 	}
 
-	microservice := newMicroservice(
+	svc := newMicroservice(
 		&l,
 		ytsaurus,
 		image,
-		resource.Spec.UI.InstanceCount,
+		spec.InstanceCount,
 		map[string]ytconfig.GeneratorDescriptor{
 			UIClustersConfigFileName: {
 				F:   cfgen.GetUIClustersConfig,
@@ -57,10 +63,14 @@ func NewUI(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master Compon
 				Fmt: ytconfig.ConfigFormatJsonWithJsPrologue,
 			},
 		},
+		spec.Tolerations,
+		spec.Affinity,
+		spec.NodeSelector,
 		"ytsaurus-ui-deployment",
-		"ytsaurus-ui")
+		"ytsaurus-ui",
+	)
 
-	microservice.getHttpService().SetHttpNodePort(resource.Spec.UI.HttpNodePort)
+	svc.getHttpService().SetHttpNodePort(res.Spec.UI.HttpNodePort)
 
 	return &UI{
 		componentBase: componentBase{
@@ -68,15 +78,16 @@ func NewUI(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master Compon
 			ytsaurus: ytsaurus,
 			cfgen:    cfgen,
 		},
-		microservice: microservice,
+		microservice: svc,
 		initJob: NewInitJob(
 			&l,
+			ytsaurus.GetJobs(),
 			ytsaurus.APIProxy(),
 			ytsaurus,
-			resource.Spec.ImagePullSecrets,
+			res.Spec.ImagePullSecrets,
 			"default",
 			consts.ClientConfigFileName,
-			resource.Spec.CoreImage,
+			res.Spec.CoreImage,
 			cfgen.GetNativeClientConfig),
 		secret: resources.NewStringSecret(
 			l.GetSecretName(),

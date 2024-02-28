@@ -2,13 +2,15 @@ package resources
 
 import (
 	"context"
-	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
-	labeller2 "github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
+	labeller2 "github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 )
 
 type Deployment struct {
@@ -16,19 +18,29 @@ type Deployment struct {
 	labeller *labeller2.Labeller
 	ytsaurus *apiproxy.Ytsaurus
 
-	oldObject appsv1.Deployment
-	newObject appsv1.Deployment
-	built     bool
+	oldObject    appsv1.Deployment
+	newObject    appsv1.Deployment
+	built        bool
+	nodeSelector map[string]string
+	tolerations  []corev1.Toleration
+	affinity     *corev1.Affinity
 }
 
 func NewDeployment(
 	name string,
 	labeller *labeller2.Labeller,
-	ytsaurus *apiproxy.Ytsaurus) *Deployment {
+	tolerations []corev1.Toleration,
+	affinity *corev1.Affinity,
+	nodeSelector map[string]string,
+	ytsaurus *apiproxy.Ytsaurus,
+) *Deployment {
 	return &Deployment{
-		name:     name,
-		labeller: labeller,
-		ytsaurus: ytsaurus,
+		name:         name,
+		labeller:     labeller,
+		ytsaurus:     ytsaurus,
+		tolerations:  tolerations,
+		affinity:     affinity,
+		nodeSelector: nodeSelector,
 	}
 }
 
@@ -57,6 +69,9 @@ func (d *Deployment) Build() *appsv1.Deployment {
 					Annotations: d.ytsaurus.GetResource().Spec.ExtraPodAnnotations,
 				},
 				Spec: corev1.PodSpec{
+					Tolerations:      d.tolerations,
+					Affinity:         d.affinity,
+					NodeSelector:     d.nodeSelector,
 					ImagePullSecrets: d.ytsaurus.GetResource().Spec.ImagePullSecrets,
 				},
 			},

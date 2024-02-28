@@ -75,6 +75,7 @@ func NewQueryTracker(
 		ytsaurusClient: yc,
 		initQTState: NewInitJob(
 			&l,
+			ytsaurus.GetJobs(),
 			ytsaurus.APIProxy(),
 			ytsaurus,
 			resource.Spec.ImagePullSecrets,

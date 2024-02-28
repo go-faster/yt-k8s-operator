@@ -68,6 +68,7 @@ func NewScheduler(
 		tabletNodes: tabletNodes,
 		initUser: NewInitJob(
 			&l,
+			ytsaurus.GetJobs(),
 			ytsaurus.APIProxy(),
 			ytsaurus,
 			resource.Spec.ImagePullSecrets,
@@ -77,6 +78,7 @@ func NewScheduler(
 			cfgen.GetNativeClientConfig),
 		initOpArchive: NewInitJob(
 			&l,
+			ytsaurus.GetJobs(),
 			ytsaurus.APIProxy(),
 			ytsaurus,
 			resource.Spec.ImagePullSecrets,

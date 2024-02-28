@@ -51,6 +51,7 @@ func NewSecondaryMaster(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, 
 	)
 	initJob := NewInitJob(
 		&l,
+		ytsaurus.GetJobs(),
 		ytsaurus.APIProxy(),
 		ytsaurus,
 		resource.Spec.ImagePullSecrets,

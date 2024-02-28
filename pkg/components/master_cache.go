@@ -46,6 +46,7 @@ func NewMasterCache(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus) Comp
 	)
 	initJob := NewInitJob(
 		&l,
+		ytsaurus.GetJobs(),
 		ytsaurus.APIProxy(),
 		ytsaurus,
 		resource.Spec.ImagePullSecrets,

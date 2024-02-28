@@ -13,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	v1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
@@ -46,18 +47,21 @@ type InitJob struct {
 	initCompletedCondition string
 
 	image string
+	spec  *v1.JobsSpec
 
 	builtJob *batchv1.Job
 }
 
 func NewInitJob(
 	labeller *labeller.Labeller,
+	jobs *v1.JobsSpec,
 	apiProxy apiproxy.APIProxy,
 	conditionsManager apiproxy.ConditionManager,
 	imagePullSecrets []corev1.LocalObjectReference,
 	name, configFileName, image string,
 	generator ytconfig.YsonGeneratorFunc) *InitJob {
 	return &InitJob{
+		spec: jobs,
 		componentBase: componentBase{
 			labeller: labeller,
 		},
@@ -121,6 +125,10 @@ func (j *InitJob) Build() *batchv1.Job {
 			},
 			RestartPolicy: corev1.RestartPolicyOnFailure,
 		},
+	}
+	if spec := j.spec; spec != nil {
+		job.Spec.Template.Spec.Tolerations = spec.Tolerations
+		job.Spec.Template.Spec.Affinity = spec.Affinity
 	}
 	j.builtJob = job
 	return job
