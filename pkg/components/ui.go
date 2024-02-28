@@ -39,7 +39,8 @@ func NewUI(
 		APIProxy:       ytsaurus.APIProxy(),
 		ComponentLabel: consts.YTComponentLabelUI,
 		ComponentName:  "UI",
-		Annotations:    res.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(res.Spec.ExtraPodAnnotations, res.Spec.UI.ExtraPodAnnotations),
+		Labels:         labeller.Join(res.Spec.ExtraPodLabels, res.Spec.UI.ExtraPodLabels),
 	}
 
 	spec := res.Spec.UI

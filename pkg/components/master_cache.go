@@ -31,7 +31,8 @@ func NewMasterCache(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus) Comp
 		ComponentLabel: consts.YTComponentLabelMasterCache,
 		ComponentName:  "MasterCache",
 		MonitoringPort: consts.MasterMonitoringPort,
-		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(resource.Spec.ExtraPodAnnotations, resource.Spec.MasterCaches.ExtraPodAnnotations),
+		Labels:         labeller.Join(resource.Spec.ExtraPodLabels, resource.Spec.MasterCaches.ExtraPodLabels),
 	}
 
 	srv := newServer(

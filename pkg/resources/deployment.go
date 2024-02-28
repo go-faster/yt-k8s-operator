@@ -10,12 +10,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
-	labeller2 "github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
+	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 )
 
 type Deployment struct {
 	name     string
-	labeller *labeller2.Labeller
+	labeller *labeller.Labeller
 	ytsaurus *apiproxy.Ytsaurus
 
 	oldObject    appsv1.Deployment
@@ -28,7 +28,7 @@ type Deployment struct {
 
 func NewDeployment(
 	name string,
-	labeller *labeller2.Labeller,
+	labeller *labeller.Labeller,
 	tolerations []corev1.Toleration,
 	affinity *corev1.Affinity,
 	nodeSelector map[string]string,

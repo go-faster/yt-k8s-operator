@@ -36,7 +36,8 @@ func NewSecondaryMaster(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, 
 		ComponentLabel: consts.YTComponentLabelSecondaryMaster,
 		ComponentName:  "SecondaryMaster",
 		MonitoringPort: consts.MasterMonitoringPort,
-		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(resource.Spec.ExtraPodAnnotations, spec.ExtraPodAnnotations),
+		Labels:         labeller.Join(resource.Spec.ExtraPodLabels, spec.ExtraPodLabels),
 	}
 
 	srv := newServer(

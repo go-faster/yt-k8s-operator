@@ -31,14 +31,15 @@ type Spyt struct {
 func NewSpyt(
 	cfgen *ytconfig.Generator,
 	spyt *apiproxy.Spyt,
-	ytsaurus *ytv1.Ytsaurus) *Spyt {
-
+	ytsaurus *ytv1.Ytsaurus,
+) *Spyt {
 	l := labeller.Labeller{
 		ObjectMeta:     &spyt.GetResource().ObjectMeta,
 		APIProxy:       spyt.APIProxy(),
 		ComponentLabel: fmt.Sprintf("ytsaurus-spyt-%s", spyt.GetResource().Name),
 		ComponentName:  fmt.Sprintf("SPYT-%s", spyt.GetResource().Name),
 		Annotations:    ytsaurus.Spec.ExtraPodAnnotations,
+		Labels:         ytsaurus.Spec.ExtraPodLabels,
 	}
 
 	return &Spyt{

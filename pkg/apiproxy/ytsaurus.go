@@ -23,7 +23,8 @@ func NewYtsaurus(
 	ytsaurus *ytv1.Ytsaurus,
 	client client.Client,
 	recorder record.EventRecorder,
-	scheme *runtime.Scheme) *Ytsaurus {
+	scheme *runtime.Scheme,
+) *Ytsaurus {
 	return &Ytsaurus{
 		ytsaurus: ytsaurus,
 		apiProxy: NewAPIProxy(ytsaurus, client, recorder, scheme),

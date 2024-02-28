@@ -42,7 +42,8 @@ func NewScheduler(
 		ComponentLabel: consts.YTComponentLabelScheduler,
 		ComponentName:  "Scheduler",
 		MonitoringPort: consts.SchedulerMonitoringPort,
-		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(resource.Spec.ExtraPodAnnotations, resource.Spec.Schedulers.ExtraPodAnnotations),
+		Labels:         labeller.Join(resource.Spec.ExtraPodLabels, resource.Spec.Schedulers.ExtraPodLabels),
 	}
 
 	server := newServer(

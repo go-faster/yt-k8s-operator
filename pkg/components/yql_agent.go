@@ -32,10 +32,11 @@ func NewYQLAgent(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master 
 		ComponentLabel: consts.YTComponentLabelYqlAgent,
 		ComponentName:  "YqlAgent",
 		MonitoringPort: consts.YQLAgentMonitoringPort,
-		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(resource.Spec.ExtraPodAnnotations, resource.Spec.YQLAgents.ExtraPodAnnotations),
+		Labels:         labeller.Join(resource.Spec.ExtraPodLabels, resource.Spec.YQLAgents.ExtraPodLabels),
 	}
 
-	server := newServer(
+	svc := newServer(
 		&l,
 		ytsaurus,
 		&resource.Spec.YQLAgents.InstanceSpec,
@@ -52,7 +53,7 @@ func NewYQLAgent(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master 
 			ytsaurus: ytsaurus,
 			cfgen:    cfgen,
 		},
-		server: server,
+		server: svc,
 		master: master,
 		initEnvironment: NewInitJob(
 			&l,
@@ -63,11 +64,13 @@ func NewYQLAgent(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master 
 			"yql-agent-environment",
 			consts.ClientConfigFileName,
 			resource.Spec.CoreImage,
-			cfgen.GetNativeClientConfig),
+			cfgen.GetNativeClientConfig,
+		),
 		secret: resources.NewStringSecret(
 			l.GetSecretName(),
 			&l,
-			ytsaurus.APIProxy()),
+			ytsaurus.APIProxy(),
+		),
 	}
 }
 

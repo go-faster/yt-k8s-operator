@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
-	labeller2 "github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
+	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 )
 
 type TCPService struct {
@@ -17,7 +18,7 @@ type TCPService struct {
 	portCount   int32
 	minPort     int32
 
-	labeller *labeller2.Labeller
+	labeller *labeller.Labeller
 	apiProxy apiproxy.APIProxy
 
 	oldObject corev1.Service
@@ -28,7 +29,7 @@ func NewTCPService(name string,
 	serviceType corev1.ServiceType,
 	portCount int32,
 	minPort int32,
-	labeller *labeller2.Labeller,
+	labeller *labeller.Labeller,
 	apiProxy apiproxy.APIProxy) *TCPService {
 	return &TCPService{
 		name:        name,

@@ -221,12 +221,14 @@ type InstanceSpec struct {
 	Locations             []LocationSpec                  `json:"locations,omitempty"`
 	VolumeClaimTemplates  []EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplates,omitempty"`
 	// Deprecated. Use Affinity.PodAntiAffinity instead.
-	EnableAntiAffinity *bool                  `json:"enableAntiAffinity,omitempty"`
-	Loggers            []TextLoggerSpec       `json:"loggers,omitempty"`
-	StructuredLoggers  []StructuredLoggerSpec `json:"structuredLoggers,omitempty"`
-	Affinity           *corev1.Affinity       `json:"affinity,omitempty"`
-	NodeSelector       map[string]string      `json:"nodeSelector,omitempty"`
-	Tolerations        []corev1.Toleration    `json:"tolerations,omitempty"`
+	EnableAntiAffinity  *bool                  `json:"enableAntiAffinity,omitempty"`
+	Loggers             []TextLoggerSpec       `json:"loggers,omitempty"`
+	StructuredLoggers   []StructuredLoggerSpec `json:"structuredLoggers,omitempty"`
+	Affinity            *corev1.Affinity       `json:"affinity,omitempty"`
+	NodeSelector        map[string]string      `json:"nodeSelector,omitempty"`
+	Tolerations         []corev1.Toleration    `json:"tolerations,omitempty"`
+	ExtraPodLabels      map[string]string      `json:"extraPodLabels,omitempty"`
+	ExtraPodAnnotations map[string]string      `json:"extraPodAnnotations,omitempty"`
 	// Component config for native RPC bus transport.
 	//+optional
 	NativeTransport *RPCTransportSpec `json:"nativeTransport,omitempty"`
@@ -392,9 +394,11 @@ type UISpec struct {
 	Description *string `json:"description,omitempty"`
 	Group       *string `json:"group,omitempty"`
 
-	Tolerations  []corev1.Toleration `json:"tolerations,omitempty"`
-	Affinity     *corev1.Affinity    `json:"affinity,omitempty"`
-	NodeSelector map[string]string   `json:"nodeSelector,omitempty"`
+	Tolerations         []corev1.Toleration `json:"tolerations,omitempty"`
+	Affinity            *corev1.Affinity    `json:"affinity,omitempty"`
+	NodeSelector        map[string]string   `json:"nodeSelector,omitempty"`
+	ExtraPodAnnotations map[string]string   `json:"extraPodAnnotations,omitempty"`
+	ExtraPodLabels      map[string]string   `json:"extraPodLabels,omitempty"`
 }
 
 type QueryTrackerSpec struct {
@@ -402,11 +406,13 @@ type QueryTrackerSpec struct {
 }
 
 type StrawberryControllerSpec struct {
-	Resources    corev1.ResourceRequirements `json:"resources,omitempty"`
-	Image        *string                     `json:"image,omitempty"`
-	Tolerations  []corev1.Toleration         `json:"tolerations,omitempty"`
-	Affinity     *corev1.Affinity            `json:"affinity,omitempty"`
-	NodeSelector map[string]string           `json:"nodeSelector,omitempty"`
+	Resources           corev1.ResourceRequirements `json:"resources,omitempty"`
+	Image               *string                     `json:"image,omitempty"`
+	Tolerations         []corev1.Toleration         `json:"tolerations,omitempty"`
+	Affinity            *corev1.Affinity            `json:"affinity,omitempty"`
+	NodeSelector        map[string]string           `json:"nodeSelector,omitempty"`
+	ExtraPodAnnotations map[string]string           `json:"extraPodAnnotations,omitempty"`
+	ExtraPodLabels      map[string]string           `json:"extraPodLabels,omitempty"`
 }
 
 type YQLAgentSpec struct {
@@ -465,6 +471,7 @@ type YtsaurusSpec struct {
 	HostNetwork bool `json:"hostNetwork"`
 
 	ExtraPodAnnotations map[string]string `json:"extraPodAnnotations,omitempty"`
+	ExtraPodLabels      map[string]string `json:"extraPodLabels,omitempty"`
 
 	Bootstrap *BootstrapSpec `json:"bootstrap,omitempty"`
 

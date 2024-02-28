@@ -48,6 +48,7 @@ func NewYtsaurusClient(
 		ComponentLabel: consts.YTComponentLabelClient,
 		ComponentName:  "YtsaurusClient",
 		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Labels:         resource.Spec.ExtraPodLabels,
 	}
 
 	return &ytsaurusClient{

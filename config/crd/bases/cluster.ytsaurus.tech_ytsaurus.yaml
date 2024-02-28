@@ -680,6 +680,14 @@ spec:
                             type: array
                         type: object
                     type: object
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   nodeSelector:
@@ -1341,6 +1349,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   instanceCount:
@@ -3510,6 +3526,14 @@ spec:
                     enableAntiAffinity:
                       description: Deprecated. Use Affinity.PodAntiAffinity instead.
                       type: boolean
+                    extraPodAnnotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraPodLabels:
+                      additionalProperties:
+                        type: string
+                      type: object
                     image:
                       type: string
                     instanceCount:
@@ -5699,6 +5723,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   instanceCount:
@@ -7869,6 +7901,14 @@ spec:
                     enableAntiAffinity:
                       description: Deprecated. Use Affinity.PodAntiAffinity instead.
                       type: boolean
+                    extraPodAnnotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraPodLabels:
+                      additionalProperties:
+                        type: string
+                      type: object
                     image:
                       type: string
                     instanceCount:
@@ -9549,6 +9589,10 @@ spec:
                 additionalProperties:
                   type: string
                 type: object
+              extraPodLabels:
+                additionalProperties:
+                  type: string
+                type: object
               hostNetwork:
                 default: false
                 type: boolean
@@ -10151,6 +10195,14 @@ spec:
                     enableAntiAffinity:
                       description: Deprecated. Use Affinity.PodAntiAffinity instead.
                       type: boolean
+                    extraPodAnnotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraPodLabels:
+                      additionalProperties:
+                        type: string
+                      type: object
                     httpNodePort:
                       format: int32
                       type: integer
@@ -12994,6 +13046,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   hostAddressLabel:
                     type: string
                   hostAddresses:
@@ -15209,6 +15269,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   hostAddressLabel:
                     type: string
                   hostAddresses:
@@ -17381,6 +17449,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   instanceCount:
@@ -19541,6 +19617,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   instanceCount:
@@ -21708,6 +21792,14 @@ spec:
                     enableAntiAffinity:
                       description: Deprecated. Use Affinity.PodAntiAffinity instead.
                       type: boolean
+                    extraPodAnnotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraPodLabels:
+                      additionalProperties:
+                        type: string
+                      type: object
                     image:
                       type: string
                     instanceCount:
@@ -23917,6 +24009,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   instanceCount:
@@ -26086,6 +26186,14 @@ spec:
                     enableAntiAffinity:
                       description: Deprecated. Use Affinity.PodAntiAffinity instead.
                       type: boolean
+                    extraPodAnnotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraPodLabels:
+                      additionalProperties:
+                        type: string
+                      type: object
                     hostAddressLabel:
                       type: string
                     hostAddresses:
@@ -28278,6 +28386,14 @@ spec:
                             type: array
                         type: object
                     type: object
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   nodeSelector:
@@ -28937,6 +29053,14 @@ spec:
                     enableAntiAffinity:
                       description: Deprecated. Use Affinity.PodAntiAffinity instead.
                       type: boolean
+                    extraPodAnnotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraPodLabels:
+                      additionalProperties:
+                        type: string
+                      type: object
                     image:
                       type: string
                     instanceCount:
@@ -31132,6 +31256,14 @@ spec:
                     enableAntiAffinity:
                       description: Deprecated. Use Affinity.PodAntiAffinity instead.
                       type: boolean
+                    extraPodAnnotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraPodLabels:
+                      additionalProperties:
+                        type: string
+                      type: object
                     image:
                       type: string
                     instanceCount:
@@ -33426,6 +33558,14 @@ spec:
                       - name
                       type: object
                     type: array
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   group:
                     type: string
                   httpNodePort:
@@ -34113,6 +34253,14 @@ spec:
                   enableAntiAffinity:
                     description: Deprecated. Use Affinity.PodAntiAffinity instead.
                     type: boolean
+                  extraPodAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  extraPodLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   image:
                     type: string
                   instanceCount:

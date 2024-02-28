@@ -32,14 +32,16 @@ type Chyt struct {
 func NewChyt(
 	cfgen *ytconfig.Generator,
 	chyt *apiproxy.Chyt,
-	ytsaurus *ytv1.Ytsaurus) *Chyt {
+	ytsaurus *ytv1.Ytsaurus,
+) *Chyt {
 
 	l := labeller.Labeller{
 		ObjectMeta:     &chyt.GetResource().ObjectMeta,
 		APIProxy:       chyt.APIProxy(),
 		ComponentLabel: fmt.Sprintf("ytsaurus-chyt-%s", chyt.GetResource().Name),
 		ComponentName:  fmt.Sprintf("CHYT-%s", chyt.GetResource().Name),
-		Annotations:    ytsaurus.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(ytsaurus.Spec.ExtraPodAnnotations, ytsaurus.Spec.StrawberryController.ExtraPodAnnotations),
+		Labels:         labeller.Join(ytsaurus.Spec.ExtraPodLabels, ytsaurus.Spec.StrawberryController.ExtraPodLabels),
 	}
 
 	return &Chyt{

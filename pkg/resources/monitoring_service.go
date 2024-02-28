@@ -4,25 +4,26 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
-	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
-	labeller2 "github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
+	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
+	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 )
 
 type MonitoringService struct {
 	name     string
-	labeller *labeller2.Labeller
+	labeller *labeller.Labeller
 	apiProxy apiproxy.APIProxy
 
 	oldObject corev1.Service
 	newObject corev1.Service
 }
 
-func NewMonitoringService(labeller *labeller2.Labeller, apiProxy apiproxy.APIProxy) *MonitoringService {
+func NewMonitoringService(labeller *labeller.Labeller, apiProxy apiproxy.APIProxy) *MonitoringService {
 	return &MonitoringService{
 		name:     fmt.Sprintf("%s-monitoring", labeller.ComponentLabel),
 		labeller: labeller,

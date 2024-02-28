@@ -44,7 +44,8 @@ func NewMaster(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus) Component
 		ComponentLabel: consts.YTComponentLabelMaster,
 		ComponentName:  "Master",
 		MonitoringPort: consts.MasterMonitoringPort,
-		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(resource.Spec.ExtraPodAnnotations, resource.Spec.PrimaryMasters.ExtraPodAnnotations),
+		Labels:         labeller.Join(resource.Spec.ExtraPodLabels, resource.Spec.PrimaryMasters.ExtraPodLabels),
 	}
 
 	server := newServer(

@@ -44,7 +44,8 @@ func NewQueryTracker(
 		ComponentLabel: "yt-query-tracker",
 		ComponentName:  "QueryTracker",
 		MonitoringPort: consts.QueryTrackerMonitoringPort,
-		Annotations:    resource.Spec.ExtraPodAnnotations,
+		Annotations:    labeller.Join(resource.Spec.ExtraPodAnnotations, resource.Spec.QueryTrackers.ExtraPodAnnotations),
+		Labels:         labeller.Join(resource.Spec.ExtraPodLabels, resource.Spec.QueryTrackers.ExtraPodLabels),
 	}
 
 	server := newServer(
