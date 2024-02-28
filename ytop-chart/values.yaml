@@ -1,4 +1,5 @@
 controllerManager:
+  tolerations: []
   kubeRbacProxy:
     args:
     - --secure-listen-address=:8443
