@@ -168,6 +168,10 @@ func (u *UI) syncComponents(ctx context.Context) (err error) {
 			Name:  "APP_INSTALLATION",
 			Value: "custom",
 		},
+		{
+			Name:  "APP_HTTP_PORT",
+			Value: fmt.Sprintf("%d", u.microservice.getHTTPService().HTTPPort()),
+		},
 	}
 
 	if ytsaurusResource.Spec.UI.UseInsecureCookies {
@@ -203,6 +207,13 @@ func (u *UI) syncComponents(ctx context.Context) (err error) {
 			Env:          env,
 			Command:      []string{"supervisord"},
 			VolumeMounts: volumeMounts,
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          "http",
+					Protocol:      corev1.ProtocolTCP,
+					ContainerPort: u.microservice.getHTTPService().HTTPPort(),
+				},
+			},
 		},
 	}
 
