@@ -45,16 +45,33 @@ func (s *HTTPService) Name() string {
 	return s.name
 }
 
-func (s *HTTPService) SetHttpNodePort(port *int32) {
+func (s *HTTPService) SetHTTPNodePort(port *int32) {
 	s.httpNodePort = port
 }
 
-func (s *HTTPService) SetHttpsNodePort(port *int32) {
+func (s *HTTPService) SetHTTPSNodePort(port *int32) {
 	s.httpsNodePort = port
+}
+
+func (s *HTTPService) SetHTTPPort(port *int32) {
+	s.transport.HTTPPort = port
+}
+
+func (s *HTTPService) SetHTTPSPort(port *int32) {
+	s.transport.HTTPSPort = port
 }
 
 func (s *HTTPService) Sync(ctx context.Context) error {
 	return s.apiProxy.SyncObject(ctx, &s.oldObject, &s.newObject)
+}
+
+func (s *HTTPService) HTTPPort() int32 {
+	for _, port := range s.newObject.Spec.Ports {
+		if port.Name == "http" {
+			return port.Port
+		}
+	}
+	return 0
 }
 
 func (s *HTTPService) Build() *corev1.Service {
@@ -70,6 +87,9 @@ func (s *HTTPService) Build() *corev1.Service {
 			Port:       consts.HTTPProxyHTTPPort,
 			TargetPort: intstr.IntOrString{IntVal: consts.HTTPProxyHTTPPort},
 		}
+		if s.transport.HTTPPort != nil {
+			port.Port = *s.transport.HTTPPort
+		}
 		if s.httpNodePort != nil {
 			port.NodePort = *s.httpNodePort
 		}
@@ -84,6 +104,9 @@ func (s *HTTPService) Build() *corev1.Service {
 		}
 		if s.httpsNodePort != nil {
 			port.NodePort = *s.httpsNodePort
+		}
+		if s.transport.HTTPSPort != nil {
+			port.Port = *s.transport.HTTPSPort
 		}
 		s.newObject.Spec.Ports = append(s.newObject.Spec.Ports, port)
 	}

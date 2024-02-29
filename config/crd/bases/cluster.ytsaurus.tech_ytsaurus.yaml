@@ -10448,6 +10448,12 @@ spec:
                       properties:
                         disableHttp:
                           type: boolean
+                        httpPort:
+                          format: int32
+                          type: integer
+                        httpsPort:
+                          format: int32
+                          type: integer
                         httpsSecret:
                           description: Reference to kubernetes.io/tls secret.
                           properties:
@@ -33569,6 +33575,9 @@ spec:
                   group:
                     type: string
                   httpNodePort:
+                    format: int32
+                    type: integer
+                  httpPort:
                     format: int32
                     type: integer
                   image:

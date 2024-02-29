@@ -7,12 +7,13 @@ import (
 	"reflect"
 
 	"github.com/google/go-cmp/cmp"
+	"go.ytsaurus.tech/yt/go/yson"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/resources"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	"go.ytsaurus.tech/yt/go/yson"
-	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -36,7 +37,8 @@ func NewConfigHelper(
 	apiProxy apiproxy.APIProxy,
 	name string,
 	configOverrides *corev1.LocalObjectReference,
-	generators map[string]ytconfig.GeneratorDescriptor) *ConfigHelper {
+	generators map[string]ytconfig.GeneratorDescriptor,
+) *ConfigHelper {
 	return &ConfigHelper{
 		labeller:        labeller,
 		apiProxy:        apiProxy,

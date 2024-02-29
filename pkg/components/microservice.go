@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"fmt"
 
 	ptr "k8s.io/utils/pointer"
 
@@ -27,7 +28,7 @@ type microservice interface {
 	needSync() bool
 	needUpdate() bool
 	getImage() string
-	getHttpService() *resources.HTTPService
+	getHTTPService() *resources.HTTPService
 	buildDeployment() *appsv1.Deployment
 	buildService() *corev1.Service
 	buildConfig() *corev1.ConfigMap
@@ -68,7 +69,8 @@ func newMicroservice(
 			serviceName,
 			nil,
 			labeller,
-			ytsaurus.APIProxy()),
+			ytsaurus.APIProxy(),
+		),
 		deployment: resources.NewDeployment(
 			deploymentName,
 			labeller,
@@ -82,7 +84,8 @@ func newMicroservice(
 			ytsaurus.APIProxy(),
 			labeller.GetMainConfigMapName(),
 			ytsaurus.GetResource().Spec.ConfigOverrides,
-			generators),
+			generators,
+		),
 	}
 }
 
@@ -125,7 +128,7 @@ func (m *microserviceImpl) buildDeployment() *appsv1.Deployment {
 	return m.rebuildDeployment()
 }
 
-func (m *microserviceImpl) getHttpService() *resources.HTTPService {
+func (m *microserviceImpl) getHTTPService() *resources.HTTPService {
 	return m.service
 }
 
@@ -135,6 +138,19 @@ func (m *microserviceImpl) rebuildDeployment() *appsv1.Deployment {
 	m.builtDeployment.Spec.Template.Spec.Containers = []corev1.Container{
 		{
 			Image: m.image,
+			Env: []corev1.EnvVar{
+				{
+					Name:  "APP_HTTP_PORT",
+					Value: fmt.Sprintf("%d", m.service.HTTPPort()),
+				},
+			},
+			Ports: []corev1.ContainerPort{
+				{
+					Name:          "http",
+					Protocol:      corev1.ProtocolTCP,
+					ContainerPort: m.service.HTTPPort(),
+				},
+			},
 		},
 	}
 	return m.builtDeployment

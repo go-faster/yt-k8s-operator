@@ -71,7 +71,8 @@ func NewUI(
 		"ytsaurus-ui",
 	)
 
-	svc.getHttpService().SetHttpNodePort(res.Spec.UI.HttpNodePort)
+	svc.getHTTPService().SetHTTPNodePort(spec.HTTPNodePort)
+	svc.getHTTPService().SetHTTPPort(spec.HTTPPort)
 
 	return &UI{
 		componentBase: componentBase{
@@ -89,11 +90,13 @@ func NewUI(
 			"default",
 			consts.ClientConfigFileName,
 			res.Spec.CoreImage,
-			cfgen.GetNativeClientConfig),
+			cfgen.GetNativeClientConfig,
+		),
 		secret: resources.NewStringSecret(
 			l.GetSecretName(),
 			&l,
-			ytsaurus.APIProxy()),
+			ytsaurus.APIProxy(),
+		),
 		master: master,
 	}
 }
@@ -244,7 +247,6 @@ func (u *UI) doSync(ctx context.Context, dry bool) (ComponentStatus, error) {
 
 	if u.ytsaurus.GetClusterState() == ytv1.ClusterStateUpdating {
 		if IsUpdatingComponent(u.ytsaurus, u) {
-
 			if u.ytsaurus.GetUpdateState() == ytv1.UpdateStateWaitingForPodsRemoval {
 				if !dry {
 					err = removePods(ctx, u.microservice, &u.componentBase)

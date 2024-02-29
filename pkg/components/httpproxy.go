@@ -3,14 +3,15 @@ package components
 import (
 	"context"
 
+	"go.ytsaurus.tech/yt/go/yt"
+	corev1 "k8s.io/api/core/v1"
+
 	ytv1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/resources"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	"go.ytsaurus.tech/yt/go/yt"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type httpProxy struct {
@@ -31,8 +32,8 @@ func NewHTTPProxy(
 	cfgen *ytconfig.Generator,
 	ytsaurus *apiproxy.Ytsaurus,
 	masterReconciler Component,
-	spec ytv1.HTTPProxiesSpec) Component {
-
+	spec ytv1.HTTPProxiesSpec,
+) Component {
 	resource := ytsaurus.GetResource()
 	l := labeller.Labeller{
 		ObjectMeta:     &resource.ObjectMeta,
@@ -42,7 +43,7 @@ func NewHTTPProxy(
 		MonitoringPort: consts.HTTPProxyMonitoringPort,
 	}
 
-	server := newServer(
+	srv := newServer(
 		&l,
 		ytsaurus,
 		&spec.InstanceSpec,
@@ -60,17 +61,19 @@ func NewHTTPProxy(
 		httpsSecret = resources.NewTLSSecret(
 			spec.Transport.HTTPSSecret.Name,
 			consts.HTTPSSecretVolumeName,
-			consts.HTTPSSecretMountPoint)
+			consts.HTTPSSecretMountPoint,
+		)
 	}
 
 	balancingService := resources.NewHTTPService(
 		cfgen.GetHTTPProxiesServiceName(spec.Role),
 		&spec.Transport,
 		&l,
-		ytsaurus.APIProxy())
+		ytsaurus.APIProxy(),
+	)
 
-	balancingService.SetHttpNodePort(spec.HttpNodePort)
-	balancingService.SetHttpsNodePort(spec.HttpsNodePort)
+	balancingService.SetHTTPNodePort(spec.HttpNodePort)
+	balancingService.SetHTTPSNodePort(spec.HttpsNodePort)
 
 	return &httpProxy{
 		componentBase: componentBase{
@@ -78,7 +81,7 @@ func NewHTTPProxy(
 			ytsaurus: ytsaurus,
 			cfgen:    cfgen,
 		},
-		server:           server,
+		server:           srv,
 		master:           masterReconciler,
 		serviceType:      spec.ServiceType,
 		role:             spec.Role,

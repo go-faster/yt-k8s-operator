@@ -259,6 +259,10 @@ type HTTPTransportSpec struct {
 	HTTPSSecret *corev1.LocalObjectReference `json:"httpsSecret,omitempty"`
 	//+optional
 	DisableHTTP bool `json:"disableHttp,omitempty"`
+	//+optional
+	HTTPPort *int32 `json:"httpPort,omitempty"`
+	//+optional
+	HTTPSPort *int32 `json:"httpsPort,omitempty"`
 }
 
 type HTTPProxiesSpec struct {
@@ -375,7 +379,8 @@ type UISpec struct {
 	Image *string `json:"image,omitempty"`
 	//+kubebuilder:default:=NodePort
 	ServiceType  corev1.ServiceType `json:"serviceType,omitempty"`
-	HttpNodePort *int32             `json:"httpNodePort,omitempty"`
+	HTTPNodePort *int32             `json:"httpNodePort,omitempty"`
+	HTTPPort     *int32             `json:"httpPort,omitempty"`
 	//+kubebuilder:default:=true
 	//+optional
 	UseInsecureCookies bool                        `json:"useInsecureCookies"`
