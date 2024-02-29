@@ -16,13 +16,9 @@ spec:
       labels:
         control-plane: controller-manager
       {{- include "ytop-chart.selectorLabels" . | nindent 8 }}
-{{- with .Values.controllerManager.additionalLabels }}
-{{ toYaml . | indent 8}}
-{{- end }}
       annotations:
         kubectl.kubernetes.io/default-container: manager
     spec:
-      tolerations: {{- toYaml .Values.controllerManager.tolerations | nindent 8 }}
       containers:
       - args: {{- toYaml .Values.controllerManager.kubeRbacProxy.args | nindent 8 }}
         env:
