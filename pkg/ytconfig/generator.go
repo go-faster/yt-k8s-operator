@@ -647,6 +647,9 @@ func (g *Generator) getHTTPProxyConfigImpl(spec *ytv1.HTTPProxiesSpec) (HTTPProx
 	g.fillDriver(&c.Driver)
 	g.fillCommonService(&c.CommonServer, &spec.InstanceSpec)
 	g.fillBusServer(&c.CommonServer, spec.NativeTransport)
+	if spec.Transport.HTTPPort != nil {
+		c.Port = int(*spec.Transport.HTTPPort)
+	}
 
 	if g.ytsaurus.Spec.OauthService != nil {
 		c.Auth.OauthService = &OauthService{
