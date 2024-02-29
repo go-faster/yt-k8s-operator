@@ -41,6 +41,8 @@ func NewHTTPProxy(
 		ComponentLabel: cfgen.FormatComponentStringWithDefault(consts.YTComponentLabelHTTPProxy, spec.Role),
 		ComponentName:  cfgen.FormatComponentStringWithDefault("HttpProxy", spec.Role),
 		MonitoringPort: consts.HTTPProxyMonitoringPort,
+		Labels:         labeller.Join(resource.Spec.ExtraPodLabels, spec.ExtraPodLabels),
+		Annotations:    labeller.Join(resource.Spec.ExtraPodAnnotations, spec.ExtraPodAnnotations),
 	}
 
 	srv := newServer(
