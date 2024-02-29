@@ -88,7 +88,7 @@ func (s *HTTPService) Build() *corev1.Service {
 			TargetPort: intstr.IntOrString{IntVal: consts.HTTPProxyHTTPPort},
 		}
 		if s.transport.HTTPPort != nil {
-			port.Port = *s.transport.HTTPPort
+			port.TargetPort = intstr.IntOrString{IntVal: *s.transport.HTTPPort}
 		}
 		if s.httpNodePort != nil {
 			port.NodePort = *s.httpNodePort
