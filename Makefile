@@ -115,6 +115,7 @@ docker-push: ## Push docker image with the manager.
 .PHONY: helm
 helm: manifests kustomize helmify build ## Generate helm chart.
 	$(KUSTOMIZE) build config/default | $(HELMIFY) $(OPERATOR_CHART)
+	cp config/crd/bases/cluster.ytsaurus.tech_ytsaurus.yaml ytop-chart/files/ytsaurus-crd-base.yaml
 
 ##@ Deployment
 
