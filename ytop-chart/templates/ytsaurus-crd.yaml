@@ -18,6 +18,6 @@ spec:
       - v1
 {{- end -}}
 
-{{- $orig := $.Files.Get "files/ytsaurus-crd-base.yaml" | fromYaml -}}
+{{- $orig := $.Files.Get "files/cluster.ytsaurus.tech_ytsaurus.yaml" | fromYaml -}}
 {{- $patch := include "ytop-chart.ytsaurus-crd-patch" . | fromYaml -}}
 {{- merge $orig $patch | toYaml -}}

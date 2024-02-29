@@ -45,6 +45,8 @@ help: ## Display this help.
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:maxDescLen=80 webhook paths="{\"./api/...\" , \"./controllers/...\", \"./pkg/...\"}" output:crd:artifacts:config=config/crd/bases
+	mkdir -p ytop-chart/files/
+	cp config/crd/bases/*.yaml ytop-chart/files/
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -115,7 +117,6 @@ docker-push: ## Push docker image with the manager.
 .PHONY: helm
 helm: manifests kustomize helmify build ## Generate helm chart.
 	$(KUSTOMIZE) build config/default | $(HELMIFY) $(OPERATOR_CHART)
-	cp config/crd/bases/cluster.ytsaurus.tech_ytsaurus.yaml ytop-chart/files/ytsaurus-crd-base.yaml
 
 ##@ Deployment
 
