@@ -66,12 +66,10 @@ func (s *HTTPService) Sync(ctx context.Context) error {
 }
 
 func (s *HTTPService) HTTPPort() int32 {
-	for _, port := range s.newObject.Spec.Ports {
-		if port.Name == "http" {
-			return port.Port
-		}
+	if s.transport.HTTPPort != nil {
+		return *s.transport.HTTPPort
 	}
-	return 0
+	return consts.HTTPProxyHTTPPort
 }
 
 func (s *HTTPService) Build() *corev1.Service {
