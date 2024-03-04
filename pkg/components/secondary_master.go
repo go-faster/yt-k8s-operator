@@ -103,6 +103,7 @@ func (m *secondaryMaster) createInitScript() string {
 	script := []string{
 		initJobWithNativeDriverPrologue(),
 		fmt.Sprintf("/usr/bin/yt set //sys/@cluster_connection '%s'", string(clusterConnection)),
+		fmt.Sprintf(`/usr/bin/yt set '//sys/@config/multicell_manager/cell_descriptors/%x' '{roles=[chunk_host]}'`, m.spec.CellTag),
 	}
 
 	return strings.Join(script, "\n")
