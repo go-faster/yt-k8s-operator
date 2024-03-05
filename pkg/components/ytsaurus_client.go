@@ -198,7 +198,6 @@ func (yc *ytsaurusClient) handleUpdatingState(ctx context.Context) (ComponentSta
 
 			// Check tablet cell bundles.
 			notGoodBundles, err := GetNotGoodTabletCellBundles(ctx, yc.ytClient)
-
 			if err != nil {
 				return SimpleStatus(SyncStatusUpdating), err
 			}
@@ -247,53 +246,104 @@ func (yc *ytsaurusClient) handleUpdatingState(ctx context.Context) (ComponentSta
 				return SimpleStatus(SyncStatusUpdating), nil
 			}
 
-			// Check masters.
-			primaryMasterAddresses := make([]string, 0)
-			err = yc.ytClient.ListNode(ctx, ypath.Path("//sys/primary_masters"), &primaryMasterAddresses, nil)
+			type checkResult struct {
+				Possible bool
+				Message  string
+			}
+
+			checkMasters := func(msgContext string, addrsPath ypath.Path) (cond checkResult, _ error) {
+				addrs := make([]string, 0)
+				err = yc.ytClient.ListNode(ctx, addrsPath, &addrs, nil)
+				if err != nil {
+					return cond, err
+				}
+
+				leadingCount := 0
+				followingCount := 0
+
+				for _, addr := range addrs {
+					var hydra MasterHydra
+					err := yc.ytClient.GetNode(
+						ctx,
+						ypath.Path(addrsPath.JoinChild(addr, "orchid", "monitoring", "hydra")),
+						&hydra,
+						nil)
+					if err != nil {
+						return cond, err
+					}
+
+					if !hydra.Active {
+						return checkResult{
+							Possible: false,
+							Message:  fmt.Sprintf("There is a non-active %s: %v", msgContext, addrs),
+						}, nil
+					}
+
+					switch hydra.State {
+					case MasterStateLeading:
+						leadingCount += 1
+					case MasterStateFollowing:
+						followingCount += 1
+					}
+				}
+
+				if !(leadingCount == 1 && followingCount+1 == len(addrs)) {
+					return checkResult{
+						Possible: false,
+						Message:  fmt.Sprintf("There is no %s leader or some peer is not active", msgContext),
+					}, nil
+				}
+
+				return checkResult{
+					Possible: true,
+					Message:  "Update is possible",
+				}, nil
+			}
+
+			// Check primary masters.
+			cond, err := checkMasters(
+				"primary master",
+				ypath.Path(`//sys/primary_masters`),
+			)
 			if err != nil {
 				return SimpleStatus(SyncStatusUpdating), err
 			}
-
-			leadingPrimaryMasterCount := 0
-			followingPrimaryMasterCount := 0
-
-			for _, primaryMasterAddress := range primaryMasterAddresses {
-				var hydra MasterHydra
-				err := yc.ytClient.GetNode(
-					ctx,
-					ypath.Path(fmt.Sprintf("//sys/primary_masters/%v/orchid/monitoring/hydra", primaryMasterAddress)),
-					&hydra,
-					nil)
-				if err != nil {
-					return SimpleStatus(SyncStatusUpdating), err
-				}
-
-				if !hydra.Active {
-					yc.ytsaurus.SetUpdateStatusCondition(ctx, metav1.Condition{
-						Type:    consts.ConditionNoPossibility,
-						Status:  metav1.ConditionTrue,
-						Reason:  "Update",
-						Message: fmt.Sprintf("There is a non-active master: %v", primaryMasterAddresses),
-					})
-					return SimpleStatus(SyncStatusUpdating), nil
-				}
-
-				switch hydra.State {
-				case MasterStateLeading:
-					leadingPrimaryMasterCount += 1
-				case MasterStateFollowing:
-					followingPrimaryMasterCount += 1
-				}
-			}
-
-			if !(leadingPrimaryMasterCount == 1 && followingPrimaryMasterCount+1 == len(primaryMasterAddresses)) {
+			if !cond.Possible {
 				yc.ytsaurus.SetUpdateStatusCondition(ctx, metav1.Condition{
 					Type:    consts.ConditionNoPossibility,
 					Status:  metav1.ConditionTrue,
 					Reason:  "Update",
-					Message: fmt.Sprintf("There is no leader or some peer is not active"),
+					Message: cond.Message,
 				})
 				return SimpleStatus(SyncStatusUpdating), nil
+			}
+
+			if len(yc.ytsaurus.GetResource().Spec.SecondaryMasters) > 0 {
+				var (
+					cellTags         = make([]string, 0)
+					secondaryMasters = ypath.Path(`//sys/secondary_masters`)
+				)
+				if err := yc.ytClient.ListNode(ctx, secondaryMasters, &cellTags, nil); err != nil {
+					return SimpleStatus(SyncStatusUpdating), err
+				}
+				for _, cellTag := range cellTags {
+					cond, err := checkMasters(
+						fmt.Sprintf("secondary master (cell_tag: %q)", cellTag),
+						secondaryMasters.Child(cellTag),
+					)
+					if err != nil {
+						return SimpleStatus(SyncStatusUpdating), err
+					}
+					if !cond.Possible {
+						yc.ytsaurus.SetUpdateStatusCondition(ctx, metav1.Condition{
+							Type:    consts.ConditionNoPossibility,
+							Status:  metav1.ConditionTrue,
+							Reason:  "Update",
+							Message: cond.Message,
+						})
+						return SimpleStatus(SyncStatusUpdating), nil
+					}
+				}
 			}
 
 			yc.ytsaurus.SetUpdateStatusCondition(ctx, metav1.Condition{
@@ -330,7 +380,6 @@ func (yc *ytsaurusClient) handleUpdatingState(ctx context.Context) (ComponentSta
 				ypath.Path("//sys/tablet_cell_bundles"),
 				&tabletCellBundles,
 				&yt.ListNodeOptions{Attributes: []string{"tablet_cell_count"}})
-
 			if err != nil {
 				return SimpleStatus(SyncStatusUpdating), err
 			}
@@ -355,7 +404,6 @@ func (yc *ytsaurusClient) handleUpdatingState(ctx context.Context) (ComponentSta
 				ypath.Path("//sys/tablet_cells"),
 				&tabletCells,
 				nil)
-
 			if err != nil {
 				return SimpleStatus(SyncStatusUpdating), err
 			}
@@ -387,7 +435,6 @@ func (yc *ytsaurusClient) handleUpdatingState(ctx context.Context) (ComponentSta
 				ypath.Path("//sys/tablet_cells"),
 				&tabletCells,
 				nil)
-
 			if err != nil {
 				return SimpleStatus(SyncStatusUpdating), err
 			}
@@ -550,7 +597,6 @@ func (yc *ytsaurusClient) doSync(ctx context.Context, dry bool) (ComponentStatus
 			LightRequestTimeout:   &timeout,
 			DisableProxyDiscovery: disableProxyDiscovery,
 		})
-
 		if err != nil {
 			return WaitingStatus(SyncStatusPending, "ytClient init"), err
 		}
