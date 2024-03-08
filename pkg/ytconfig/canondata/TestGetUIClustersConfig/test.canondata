@@ -3,7 +3,7 @@
         {
             id=test;
             name=test;
-            proxy="http-proxies-lb-test.fake.svc.fake.zone:80";
+            proxy="http-proxies-lb-test.fake.svc.fake.zone";
             secure=%false;
             authentication=basic;
             group="My YTsaurus clusters";

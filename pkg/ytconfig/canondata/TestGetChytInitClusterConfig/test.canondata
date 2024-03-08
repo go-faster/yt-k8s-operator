@@ -1,5 +1,5 @@
 {
-    proxy="http-proxies-lb-test.fake.svc.fake.zone:80";
+    proxy="http-proxies-lb-test.fake.svc.fake.zone";
     "strawberry_root"="//sys/strawberry";
     families=[
         chyt;
