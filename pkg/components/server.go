@@ -5,6 +5,8 @@ import (
 	"log"
 	"path"
 
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	ptr "k8s.io/utils/pointer"
 
 	ytv1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
@@ -13,8 +15,6 @@ import (
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/resources"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // server manages common resources of YTsaurus cluster server components.
@@ -52,7 +52,8 @@ func newServer(
 	ytsaurus *apiproxy.Ytsaurus,
 	instanceSpec *ytv1.InstanceSpec,
 	binaryPath, configFileName, statefulSetName, serviceName string,
-	generator ytconfig.YsonGeneratorFunc) server {
+	generator ytconfig.YsonGeneratorFunc,
+) server {
 	image := ytsaurus.GetResource().Spec.CoreImage
 	if instanceSpec.Image != nil {
 		image = *instanceSpec.Image
@@ -84,14 +85,17 @@ func newServer(
 		statefulSet: resources.NewStatefulSet(
 			statefulSetName,
 			l,
-			ytsaurus),
+			ytsaurus,
+		),
 		headlessService: resources.NewHeadlessService(
 			serviceName,
 			l,
-			ytsaurus.APIProxy()),
+			ytsaurus.APIProxy(),
+		),
 		monitoringService: resources.NewMonitoringService(
 			l,
-			ytsaurus.APIProxy()),
+			ytsaurus.APIProxy(),
+		),
 		caBundle:  caBundle,
 		tlsSecret: tlsSecret,
 		configHelper: NewConfigHelper(
