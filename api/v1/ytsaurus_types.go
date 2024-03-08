@@ -399,6 +399,10 @@ type UISpec struct {
 	Description *string `json:"description,omitempty"`
 	Group       *string `json:"group,omitempty"`
 
+	// This is a temporary solution to allow UI to connect to proxies directly when resolving heavy proxies.
+	//+optional
+	ProxyPort *int `json:"proxyPort,omitempty"`
+
 	Tolerations         []corev1.Toleration `json:"tolerations,omitempty"`
 	Affinity            *corev1.Affinity    `json:"affinity,omitempty"`
 	NodeSelector        map[string]string   `json:"nodeSelector,omitempty"`

@@ -14,6 +14,7 @@ type UICluster struct {
 	ID             string               `yson:"id"`
 	Name           string               `yson:"name"`
 	Proxy          string               `yson:"proxy"`
+	ProxyPort      int                  `yson:"proxyPort,omitempty"`
 	Secure         bool                 `yson:"secure"`
 	Authentication UIAuthenticationType `yson:"authentication"`
 	Group          string               `yson:"group"`

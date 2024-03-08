@@ -34635,6 +34635,10 @@ spec:
                     type: object
                   odinBaseUrl:
                     type: string
+                  proxyPort:
+                    description: This is a temporary solution to allow UI to connect
+                      to proxies directly when res
+                    type: integer
                   resources:
                     description: ResourceRequirements describes the compute resource
                       requirements.

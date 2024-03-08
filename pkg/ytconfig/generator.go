@@ -775,6 +775,10 @@ func (g *Generator) GetUIClustersConfig() ([]byte, error) {
 	c.Proxy = g.GetHTTPProxiesAddress(consts.DefaultHTTPProxyRole)
 	c.PrimaryMaster.CellTag = g.ytsaurus.Spec.PrimaryMasters.CellTag
 
+	if port := g.ytsaurus.Spec.UI.ProxyPort; port != nil {
+		c.ProxyPort = *port
+	}
+
 	c.Theme = g.ytsaurus.Spec.UI.Theme
 	c.Environment = g.ytsaurus.Spec.UI.Environment
 	if g.ytsaurus.Spec.UI.Group != nil {
