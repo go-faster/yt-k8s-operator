@@ -127,6 +127,18 @@ func (g *Generator) GetHTTPProxiesServiceName(role string) string {
 	return g.getName(fmt.Sprintf("%s-lb", g.FormatComponentStringWithDefault("http-proxies", role)))
 }
 
+func (g *Generator) GetHTTPProxiesPort(role string) int {
+	for _, proxy := range g.ytsaurus.Spec.HTTPProxies {
+		if proxy.Role != role {
+			continue
+		}
+		if proxy.Transport.HTTPPort != nil {
+			return int(*proxy.Transport.HTTPPort)
+		}
+	}
+	return consts.HTTPProxyHTTPPort
+}
+
 func (g *Generator) GetHTTPProxiesHeadlessServiceName(role string) string {
 	return g.getName(g.FormatComponentStringWithDefault("http-proxies", role))
 }
@@ -136,10 +148,12 @@ func (g *Generator) GetHTTPProxiesStatefulSetName(role string) string {
 }
 
 func (g *Generator) GetHTTPProxiesAddress(role string) string {
-	return fmt.Sprintf("%s.%s.svc.%s",
+	return fmt.Sprintf("%s.%s.svc.%s:%d",
 		g.GetHTTPProxiesServiceName(role),
 		g.ytsaurus.Namespace,
-		g.clusterDomain)
+		g.clusterDomain,
+		g.GetHTTPProxiesPort(role),
+	)
 }
 
 func (g *Generator) GetSchedulerStatefulSetName() string {
