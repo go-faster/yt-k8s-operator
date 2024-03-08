@@ -73,7 +73,8 @@ func newServer(
 		tlsSecret = resources.NewTLSSecret(
 			transportSpec.TLSSecret.Name,
 			consts.BusSecretVolumeName,
-			consts.BusSecretMountPoint)
+			consts.BusSecretMountPoint,
+		)
 	}
 
 	return &serverImpl{
