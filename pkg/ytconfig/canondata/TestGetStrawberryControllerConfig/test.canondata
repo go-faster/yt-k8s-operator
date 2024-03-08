@@ -1,6 +1,6 @@
 {
     "location_proxies"=[
-        "http-proxies-lb-test.fake.svc.fake.zone";
+        "http-proxies-lb-test.fake.svc.fake.zone:80";
     ];
     strawberry={
         root="//sys/strawberry";
@@ -18,7 +18,7 @@
     };
     "http_api_endpoint"=":80";
     "http_location_aliases"={
-        "http-proxies-lb-test.fake.svc.fake.zone"=[
+        "http-proxies-lb-test.fake.svc.fake.zone:80"=[
             test;
         ];
     };
