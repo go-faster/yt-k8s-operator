@@ -1126,6 +1126,11 @@ func (in *UISpec) DeepCopyInto(out *UISpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ProxyPort != nil {
+		in, out := &in.ProxyPort, &out.ProxyPort
+		*out = new(int)
+		**out = **in
+	}
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
 		*out = make([]corev1.Toleration, len(*in))
