@@ -799,7 +799,10 @@ func (g *Generator) GetUICustomConfig() ([]byte, error) {
 	}
 
 	c := UICustom{
-		OdinBaseUrl: g.ytsaurus.Spec.UI.OdinBaseUrl,
+		OdinBaseURL: g.ytsaurus.Spec.UI.OdinBaseUrl,
+		UISettings: &UISettings{
+			DirectDownload: ptr.Bool(false),
+		},
 	}
 
 	return marshallYSONConfig(c)

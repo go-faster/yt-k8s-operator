@@ -37,6 +37,14 @@ func getUIClusterCarcass() UICluster {
 	}
 }
 
+// UISettings represents the subset of UISettings from the typescript definition.
+//
+// See packages/ui/src/shared/ui-settings.ts.
+type UISettings struct {
+	DirectDownload *bool `yson:"directDownload,omitempty"`
+}
+
 type UICustom struct {
-	OdinBaseUrl *string `yson:"odinBaseUrl,omitempty"`
+	OdinBaseURL *string     `yson:"odinBaseUrl,omitempty"`
+	UISettings  *UISettings `yson:"uiSettings,omitempty"`
 }
