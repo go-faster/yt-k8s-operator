@@ -57,11 +57,11 @@ func NewUI(
 		map[string]ytconfig.GeneratorDescriptor{
 			UIClustersConfigFileName: {
 				F:   cfgen.GetUIClustersConfig,
-				Fmt: ytconfig.ConfigFormatJson,
+				Fmt: ytconfig.ConfigFormatJSON,
 			},
 			UICustomConfigFileName: {
 				F:   cfgen.GetUICustomConfig,
-				Fmt: ytconfig.ConfigFormatJsonWithJsPrologue,
+				Fmt: ytconfig.ConfigFormatJSONWithJSPrologue,
 			},
 		},
 		spec.Tolerations,

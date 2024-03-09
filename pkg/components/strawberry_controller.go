@@ -89,7 +89,7 @@ func NewStrawberryController(
 		map[string]ytconfig.GeneratorDescriptor{
 			getControllerConfigFileName(name): {
 				F:   cfgen.GetStrawberryControllerConfig,
-				Fmt: ytconfig.ConfigFormatYson,
+				Fmt: ytconfig.ConfigFormatYSON,
 			},
 		},
 		tolerations,

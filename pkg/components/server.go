@@ -107,7 +107,7 @@ func newServer(
 			map[string]ytconfig.GeneratorDescriptor{
 				configFileName: {
 					F:   generator,
-					Fmt: ytconfig.ConfigFormatYson,
+					Fmt: ytconfig.ConfigFormatYSON,
 				},
 			}),
 	}

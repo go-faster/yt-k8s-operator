@@ -137,7 +137,7 @@ func (h *ConfigHelper) getConfig(fileName string) ([]byte, error) {
 		}
 	}
 
-	if descriptor.Fmt == ytconfig.ConfigFormatJson || descriptor.Fmt == ytconfig.ConfigFormatJsonWithJsPrologue {
+	if descriptor.Fmt == ytconfig.ConfigFormatJSON || descriptor.Fmt == ytconfig.ConfigFormatJSONWithJSPrologue {
 		var config any
 		err := yson.Unmarshal(serializedConfig, &config)
 		if err != nil {
@@ -147,7 +147,7 @@ func (h *ConfigHelper) getConfig(fileName string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		if descriptor.Fmt == ytconfig.ConfigFormatJsonWithJsPrologue {
+		if descriptor.Fmt == ytconfig.ConfigFormatJSONWithJSPrologue {
 			serializedConfig = append([]byte(JsPrologue), serializedConfig...)
 		}
 	}

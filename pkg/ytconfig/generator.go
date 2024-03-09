@@ -15,9 +15,9 @@ import (
 type ConfigFormat string
 
 const (
-	ConfigFormatYson               = "yson"
-	ConfigFormatJson               = "json"
-	ConfigFormatJsonWithJsPrologue = "json_with_js_prologue"
+	ConfigFormatYSON               = "yson"
+	ConfigFormatJSON               = "json"
+	ConfigFormatJSONWithJSPrologue = "json_with_js_prologue"
 )
 
 type YsonGeneratorFunc func() ([]byte, error)
