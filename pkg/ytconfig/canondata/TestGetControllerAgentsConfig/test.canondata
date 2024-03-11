@@ -73,5 +73,6 @@
     "controller_agent"={
         "enable_tmpfs"=%true;
         "use_columnar_statistics_default"=%true;
+        "enable_snapshot_loading"=%true;
     };
 }
