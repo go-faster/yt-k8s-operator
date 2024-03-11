@@ -561,6 +561,7 @@ func (g *Generator) getControllerAgentConfigImpl() (ControllerAgentServer, error
 
 	c.ControllerAgent.EnableTmpfs = g.ytsaurus.Spec.UsePorto
 	c.ControllerAgent.UseColumnarStatisticsDefault = true
+	c.ControllerAgent.EnableSnapshotLoading = true
 
 	g.fillCommonService(&c.CommonServer, &spec.InstanceSpec)
 	g.fillBusServer(&c.CommonServer, spec.NativeTransport)

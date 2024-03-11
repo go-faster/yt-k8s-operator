@@ -21,6 +21,7 @@ type SchedulerServer struct {
 type ControllerAgent struct {
 	EnableTmpfs                  bool `yson:"enable_tmpfs"`
 	UseColumnarStatisticsDefault bool `yson:"use_columnar_statistics_default"`
+	EnableSnapshotLoading        bool `yson:"enable_snapshot_loading"`
 }
 
 type ControllerAgentServer struct {
