@@ -26,7 +26,8 @@ type StatefulSet struct {
 func NewStatefulSet(
 	name string,
 	labeller *labeller.Labeller,
-	ytsaurus *apiproxy.Ytsaurus) *StatefulSet {
+	ytsaurus *apiproxy.Ytsaurus,
+) *StatefulSet {
 	return &StatefulSet{
 		name:     name,
 		labeller: labeller,
@@ -129,8 +130,12 @@ func (s *StatefulSet) ArePodsReady(ctx context.Context, minReadyInstanceCount *i
 }
 
 func (s *StatefulSet) NeedSync(replicas int32) bool {
-	return s.oldObject.Spec.Replicas == nil ||
-		*s.oldObject.Spec.Replicas != replicas
+	if !s.labeller.EqualObjectMeta(s.name, s.oldObject.ObjectMeta) {
+		return true
+	}
+
+	oldReplicas := s.oldObject.Spec.Replicas
+	return oldReplicas == nil || *oldReplicas != replicas
 }
 
 func (s *StatefulSet) Fetch(ctx context.Context) error {
