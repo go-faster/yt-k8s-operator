@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 )
@@ -82,6 +83,12 @@ func (d *Deployment) Build() *appsv1.Deployment {
 	return &d.newObject
 }
 
+func (d *Deployment) equalManagedPodSpec(other corev1.PodSpec) bool {
+	return cmp.Equal(other.Tolerations, d.tolerations) &&
+		cmp.Equal(other.Affinity, d.affinity) &&
+		cmp.Equal(other.NodeSelector, d.nodeSelector)
+}
+
 func (d *Deployment) NeedSync(replicas int32) bool {
 	if !d.labeller.EqualObjectMeta(d.name, d.oldObject.ObjectMeta) {
 		return true
@@ -90,7 +97,11 @@ func (d *Deployment) NeedSync(replicas int32) bool {
 	if oldReplicas := oldSpec.Replicas; oldReplicas == nil || *oldReplicas != replicas {
 		return true
 	}
-	return len(oldSpec.Template.Spec.Containers) != 1
+	oldTemplateSpec := oldSpec.Template.Spec
+	if !d.equalManagedPodSpec(oldTemplateSpec) {
+		return true
+	}
+	return len(oldTemplateSpec.Containers) != 1
 }
 
 func (d *Deployment) ArePodsRemoved(ctx context.Context) bool {
