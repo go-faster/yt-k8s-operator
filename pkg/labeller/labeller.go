@@ -66,6 +66,20 @@ func (l *Labeller) GetObjectMeta(name string) metav1.ObjectMeta {
 	}
 }
 
+func (l *Labeller) NeedSync(other metav1.ObjectMeta) bool {
+	var (
+		otherLabels = other.GetLabels()
+		specLabels  = l.GetMetaLabelMap(false)
+	)
+
+	for key, value := range specLabels {
+		if oldValue, ok := otherLabels[key]; !ok || oldValue != value {
+			return true
+		}
+	}
+	return false
+}
+
 func (l *Labeller) GetInitJobObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:        "ytsaurus-init",

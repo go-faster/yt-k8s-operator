@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	v1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 )
@@ -26,7 +27,8 @@ type StatefulSet struct {
 func NewStatefulSet(
 	name string,
 	labeller *labeller.Labeller,
-	ytsaurus *apiproxy.Ytsaurus) *StatefulSet {
+	ytsaurus *apiproxy.Ytsaurus,
+) *StatefulSet {
 	return &StatefulSet{
 		name:     name,
 		labeller: labeller,
@@ -129,8 +131,14 @@ func (s *StatefulSet) ArePodsReady(ctx context.Context, minReadyInstanceCount *i
 }
 
 func (s *StatefulSet) NeedSync(replicas int32) bool {
-	return s.oldObject.Spec.Replicas == nil ||
-		*s.oldObject.Spec.Replicas != replicas
+	if s.ytsaurus.GetClusterState() != v1.ClusterStateInitializing {
+		if s.labeller.NeedSync(s.oldObject.ObjectMeta) {
+			return true
+		}
+	}
+
+	oldReplicas := s.oldObject.Spec.Replicas
+	return oldReplicas == nil || *oldReplicas != replicas
 }
 
 func (s *StatefulSet) Fetch(ctx context.Context) error {

@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	v1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 )
@@ -83,9 +84,17 @@ func (d *Deployment) Build() *appsv1.Deployment {
 }
 
 func (d *Deployment) NeedSync(replicas int32) bool {
-	return d.oldObject.Spec.Replicas == nil ||
-		*d.oldObject.Spec.Replicas != replicas ||
-		len(d.oldObject.Spec.Template.Spec.Containers) != 1
+	if d.ytsaurus.GetClusterState() != v1.ClusterStateInitializing {
+		if d.labeller.NeedSync(d.oldObject.ObjectMeta) {
+			return true
+		}
+	}
+
+	oldSpec := d.oldObject.Spec
+	if oldReplicas := oldSpec.Replicas; oldReplicas == nil || *oldReplicas != replicas {
+		return true
+	}
+	return len(oldSpec.Template.Spec.Containers) != 1
 }
 
 func (d *Deployment) ArePodsRemoved(ctx context.Context) bool {
