@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/exp/maps"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -65,13 +64,6 @@ func (l *Labeller) GetObjectMeta(name string) metav1.ObjectMeta {
 		Labels:      l.GetMetaLabelMap(false),
 		Annotations: l.Annotations,
 	}
-}
-
-func (l *Labeller) EqualObjectMeta(name string, other metav1.ObjectMeta) bool {
-	return other.Name == name &&
-		other.Name == l.ObjectMeta.Namespace &&
-		maps.Equal(l.GetMetaLabelMap(false), other.Labels) &&
-		maps.Equal(l.Annotations, other.Annotations)
 }
 
 func (l *Labeller) GetInitJobObjectMeta() metav1.ObjectMeta {

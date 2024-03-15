@@ -83,14 +83,9 @@ func (d *Deployment) Build() *appsv1.Deployment {
 }
 
 func (d *Deployment) NeedSync(replicas int32) bool {
-	if !d.labeller.EqualObjectMeta(d.name, d.oldObject.ObjectMeta) {
-		return true
-	}
-	oldSpec := d.oldObject.Spec
-	if oldReplicas := oldSpec.Replicas; oldReplicas == nil || *oldReplicas != replicas {
-		return true
-	}
-	return len(oldSpec.Template.Spec.Containers) != 1
+	return d.oldObject.Spec.Replicas == nil ||
+		*d.oldObject.Spec.Replicas != replicas ||
+		len(d.oldObject.Spec.Template.Spec.Containers) != 1
 }
 
 func (d *Deployment) ArePodsRemoved(ctx context.Context) bool {
