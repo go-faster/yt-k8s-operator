@@ -41,6 +41,10 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 			nodeName := pod.Spec.NodeName
 			if nodeName == "" {
+				logger.V(1).Info("Node name is empty",
+					"pod", pod.Name,
+					"pod_namespace", pod.Namespace,
+				)
 				return admission.Allowed("node name is not set yet")
 			}
 
