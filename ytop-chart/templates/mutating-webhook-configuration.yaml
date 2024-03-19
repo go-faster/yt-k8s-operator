@@ -82,9 +82,8 @@ webhooks:
     apiVersions:
     - v1
     operations:
-    - CONNECT
     - CREATE
     - UPDATE
     resources:
-    - pods
+    - pods/binding
   sideEffects: None
