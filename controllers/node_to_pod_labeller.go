@@ -17,7 +17,7 @@ type NodeToPodLabeller struct {
 	Labels map[string]struct{}
 }
 
-//+kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups=cluster.ytsaurus.tech,resources=pods,verbs=create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups="",resources=pods,verbs=create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
 
 const apiPathMutatePod = "/mutate-v1-pod"
 
