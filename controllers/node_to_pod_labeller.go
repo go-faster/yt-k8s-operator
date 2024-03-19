@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -71,6 +70,7 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 				return admission.Errored(http.StatusInternalServerError, err)
 			}
 
+			pod = pod.DeepCopy()
 			var patched int
 			for name := range l.Labels {
 				if val, ok := node.Labels[name]; ok {
@@ -82,17 +82,18 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 				}
 			}
 			logger.V(1).Info("Patching pod",
-				"pod", pod.Name,
-				"pod_namespace", pod.Namespace,
+				"pod", podName,
 				"node", nodeName,
 				"patched", patched,
 			)
 
-			marshaledPod, err := json.Marshal(pod)
-			if err != nil {
+			if err := client.Update(ctx, pod); err != nil {
+				logger.Error(err, "patch pod",
+					"pod", podName,
+				)
 				return admission.Errored(http.StatusInternalServerError, err)
 			}
-			return admission.PatchResponseFromRaw(req.Object.Raw, marshaledPod)
+			return admission.Allowed("pod patched")
 		}),
 	})
 
