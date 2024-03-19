@@ -18,6 +18,7 @@ type NodeToPodLabeller struct {
 }
 
 //+kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups="",resources=pods,verbs=create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
+//+kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list
 
 const apiPathMutatePod = "/mutate-v1-pod"
 
@@ -45,7 +46,11 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 			node := new(corev1.Node)
 			if err := client.Get(ctx, types.NamespacedName{Name: nodeName}, node); err != nil {
-				logger.Error(err, "get node to patch", "nodeName", nodeName)
+				logger.Error(err, "get node",
+					"pod", pod.Name,
+					"pod_namespace", pod.Namespace,
+					"node", nodeName,
+				)
 				return admission.Errored(http.StatusInternalServerError, err)
 			}
 
