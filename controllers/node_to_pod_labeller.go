@@ -33,6 +33,9 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Handler: admission.HandlerFunc(func(ctx context.Context, req admission.Request) admission.Response {
 			logger := log.FromContext(ctx)
 
+			logger.Info("Handling admission request",
+				"operation", req.Operation,
+			)
 			pod := new(corev1.Pod)
 			if err := decoder.Decode(req, pod); err != nil {
 				return admission.Errored(http.StatusBadRequest, err)
@@ -45,14 +48,22 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 				return admission.Errored(http.StatusInternalServerError, err)
 			}
 
+			var patched int
 			for name := range l.Labels {
 				if val, ok := node.Labels[name]; ok {
 					if pod.Labels == nil {
 						pod.Labels = map[string]string{}
 					}
+					patched++
 					pod.Labels[name] = val
 				}
 			}
+			logger.Info("Patching pod",
+				"pod", pod.Name,
+				"pod_namespace", pod.Namespace,
+				"node", nodeName,
+				"patched", patched,
+			)
 
 			marshaledPod, err := json.Marshal(pod)
 			if err != nil {

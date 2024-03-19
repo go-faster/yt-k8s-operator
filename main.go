@@ -167,6 +167,7 @@ func main() {
 		}
 	}
 	if enableWebhooks && boolEnv("ENABLE_TOPOLOGY_LABEL_COPIER", true) {
+		setupLog.Info("Setting up pod labeller")
 		if err = (&controllers.NodeToPodLabeller{
 			Labels: map[string]struct{}{
 				"topology.kubernetes.io/zone":   {},
