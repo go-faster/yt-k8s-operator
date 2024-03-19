@@ -67,3 +67,23 @@ webhooks:
     resources:
     - ytsaurus
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: '{{ include "ytop-chart.fullname" . }}-webhook-service'
+      namespace: '{{ .Release.Namespace }}'
+      path: /mutate-v1-pod
+  failurePolicy: Fail
+  name: yt-pod-rack.kb.io
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pods/binding
+  sideEffects: None

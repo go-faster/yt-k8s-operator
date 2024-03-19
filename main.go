@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap/zapcore"
@@ -51,6 +52,19 @@ func init() {
 
 	utilruntime.Must(clusterv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+}
+
+func boolEnv(name string, defaultVal bool) bool {
+	raw, ok := os.LookupEnv(name)
+	if !ok {
+		return defaultVal
+	}
+	val, err := strconv.ParseBool(raw)
+	if err != nil {
+		setupLog.Error(err, "Failed to parse environment variable", "env", name)
+		return defaultVal
+	}
+	return val
 }
 
 func main() {
@@ -115,7 +129,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	enableWebhooks := boolEnv("ENABLE_WEBHOOKS", true)
+	if enableWebhooks {
 		if err = (&clusterv1.Ytsaurus{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Ytsaurus")
 			os.Exit(1)
@@ -131,7 +146,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	if enableWebhooks {
 		if err = (&clusterv1.Spyt{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Spyt")
 			os.Exit(1)
@@ -145,9 +160,20 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Chyt")
 		os.Exit(1)
 	}
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	if enableWebhooks {
 		if err = (&clusterv1.Chyt{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Chyt")
+			os.Exit(1)
+		}
+	}
+	if enableWebhooks && boolEnv("ENABLE_TOPOLOGY_LABEL_COPIER", true) {
+		if err = (&controllers.NodeToPodLabeller{
+			Labels: map[string]struct{}{
+				"topology.kubernetes.io/zone":   {},
+				"topology.kubernetes.io/region": {},
+			},
+		}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Pod")
 			os.Exit(1)
 		}
 	}
