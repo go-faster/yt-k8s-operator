@@ -17,7 +17,7 @@ type NodeToPodLabeller struct {
 	Labels map[string]struct{}
 }
 
-//+kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups="",resources=pods,verbs=connect;create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups="",resources=pods/binding;,verbs=create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
 //+kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list
 
 const apiPathMutatePod = "/mutate-v1-pod"
@@ -34,26 +34,39 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Handler: admission.HandlerFunc(func(ctx context.Context, req admission.Request) admission.Response {
 			logger := log.FromContext(ctx)
 
-			pod := new(corev1.Pod)
-			if err := decoder.Decode(req, pod); err != nil {
+			binding := new(corev1.Binding)
+			if err := decoder.Decode(req, binding); err != nil {
 				return admission.Errored(http.StatusBadRequest, err)
 			}
+			var (
+				podName = types.NamespacedName{
+					Namespace: binding.Namespace,
+					Name:      binding.Name,
+				}
+				nodeName = types.NamespacedName{
+					Namespace: binding.Target.Namespace,
+					Name:      binding.Target.Name,
+				}
+			)
+			logger.V(1).Info("Received binding admission request",
+				"pod", podName,
+				"node", nodeName,
+			)
 
-			nodeName := pod.Spec.NodeName
-			if nodeName == "" {
-				logger.V(1).Info("Node name is empty",
-					"pod", pod.Name,
-					"pod_namespace", pod.Namespace,
+			pod := new(corev1.Pod)
+			if err := client.Get(ctx, podName, pod); err != nil {
+				logger.Error(err, "get pod",
+					"namespace", podName.Namespace,
+					"name", podName.Name,
 				)
-				return admission.Allowed("node name is not set yet")
+				return admission.Errored(http.StatusInternalServerError, err)
 			}
 
 			node := new(corev1.Node)
-			if err := client.Get(ctx, types.NamespacedName{Name: nodeName}, node); err != nil {
+			if err := client.Get(ctx, nodeName, node); err != nil {
 				logger.Error(err, "get node",
-					"pod", pod.Name,
-					"pod_namespace", pod.Namespace,
-					"node", nodeName,
+					"namespace", nodeName.Namespace,
+					"name", nodeName.Name,
 				)
 				return admission.Errored(http.StatusInternalServerError, err)
 			}
