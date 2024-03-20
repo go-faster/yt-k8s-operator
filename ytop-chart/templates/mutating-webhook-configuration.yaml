@@ -73,8 +73,8 @@ webhooks:
     service:
       name: '{{ include "ytop-chart.fullname" . }}-webhook-service'
       namespace: '{{ .Release.Namespace }}'
-      path: /mutate-v1-pod
-  failurePolicy: Fail
+      path: /mutate-v1-pod-binding
+  failurePolicy: Ignore
   name: yt-pod-rack.kb.io
   rules:
   - apiGroups:
