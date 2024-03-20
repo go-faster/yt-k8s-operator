@@ -516,9 +516,13 @@ type YtsaurusSpec struct {
 type RackAwarenessSpec struct {
 	//+kubebuilder:default:=false
 	//+optional
-	Enable    bool   `json:"enable,omitempty"`
+	Enable bool `json:"enable,omitempty"`
+	//+kubebuilder:validation:MinLength:=1
+	//+optional
 	RackLabel string `json:"rackLabel,omitempty"`
-	DCLabel   string `json:"dcLabel,omitempty"`
+	//+kubebuilder:validation:MinLength:=1
+	//+optional
+	DCLabel string `json:"dcLabel,omitempty"`
 }
 
 type JobsSpec struct {
