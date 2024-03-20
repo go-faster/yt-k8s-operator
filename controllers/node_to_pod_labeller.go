@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -59,6 +60,13 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 					"name", podName.Name,
 				)
 				return admission.Errored(http.StatusInternalServerError, err)
+			}
+
+			if _, ok := pod.Labels[consts.YTComponentLabelName]; !ok {
+				logger.V(1).Info("Pod is not YT component, ignoring",
+					"pod", podName,
+				)
+				return admission.Allowed("pod is not YT component")
 			}
 
 			node := new(corev1.Node)
