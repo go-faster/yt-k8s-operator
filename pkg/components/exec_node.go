@@ -22,6 +22,7 @@ type execNode struct {
 	sidecars   []string
 	privileged bool
 
+	yc   YtsaurusClient
 	rack *rackSetup
 }
 
@@ -56,7 +57,6 @@ func NewExecNode(
 
 	rack := newRackSetup(
 		ytsaurus,
-		yc,
 		l,
 		consts.ExecNodeRPCPort,
 	)
@@ -71,6 +71,7 @@ func NewExecNode(
 		master:     master,
 		sidecars:   spec.Sidecars,
 		privileged: spec.Privileged,
+		yc:         yc,
 		rack:       rack,
 	}
 }
@@ -137,7 +138,10 @@ func (n *execNode) doSync(ctx context.Context, dry bool) (ComponentStatus, error
 		return WaitingStatus(SyncStatusBlocked, "pods"), err
 	}
 
-	if err := n.rack.SetRacks(ctx); err != nil {
+	if n.yc.Status(ctx).SyncStatus != SyncStatusReady {
+		return WaitingStatus(SyncStatusBlocked, n.yc.GetName()), err
+	}
+	if err := n.rack.SetRacks(ctx, n.yc.GetYtClient()); err != nil {
 		return WaitingStatus(SyncStatusBlocked, "rack_awareness"), err
 	}
 

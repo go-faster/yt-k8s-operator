@@ -16,6 +16,7 @@ type dataNode struct {
 	server server
 	master Component
 
+	yc   YtsaurusClient
 	rack *rackSetup
 }
 
@@ -50,7 +51,6 @@ func NewDataNode(
 
 	rack := newRackSetup(
 		ytsaurus,
-		yc,
 		l,
 		consts.DataNodeRPCPort,
 	)
@@ -63,6 +63,7 @@ func NewDataNode(
 		},
 		server: server,
 		master: master,
+		yc:     yc,
 		rack:   rack,
 	}
 }
@@ -103,7 +104,10 @@ func (n *dataNode) doSync(ctx context.Context, dry bool) (ComponentStatus, error
 		return WaitingStatus(SyncStatusBlocked, "pods"), err
 	}
 
-	if err := n.rack.SetRacks(ctx); err != nil {
+	if n.yc.Status(ctx).SyncStatus != SyncStatusReady {
+		return WaitingStatus(SyncStatusBlocked, n.yc.GetName()), err
+	}
+	if err := n.rack.SetRacks(ctx, n.yc.GetYtClient()); err != nil {
 		return WaitingStatus(SyncStatusBlocked, "rack_awareness"), err
 	}
 

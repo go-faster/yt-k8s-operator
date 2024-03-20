@@ -17,26 +17,23 @@ import (
 
 type rackSetup struct {
 	ytsaurus *apiproxy.Ytsaurus
-	yt       YtsaurusClient
 	labeller labeller.Labeller
 	nodePort string
 }
 
 func newRackSetup(
 	ytsaurus *apiproxy.Ytsaurus,
-	yt YtsaurusClient,
 	labeller labeller.Labeller,
 	nodePort int,
 ) *rackSetup {
 	return &rackSetup{
 		ytsaurus: ytsaurus,
-		yt:       yt,
 		labeller: labeller,
 		nodePort: strconv.Itoa(nodePort),
 	}
 }
 
-func (r *rackSetup) SetRacks(ctx context.Context) error {
+func (r *rackSetup) SetRacks(ctx context.Context, yc yt.Client) error {
 	log := klog.FromContext(ctx)
 
 	spec := r.ytsaurus.GetResource().Spec.RackAwareness
@@ -85,14 +82,14 @@ func (r *rackSetup) SetRacks(ctx context.Context) error {
 	}
 
 	for rack, hosts := range racks {
-		if err := r.ensureRack(ctx, rack); err != nil {
+		if err := r.ensureRack(ctx, yc, rack); err != nil {
 			log.Error(err, "Ensure rack",
 				"rack", rack,
 			)
 			continue
 		}
 		for host := range hosts {
-			if err := r.setHostRack(ctx, host, rack); err != nil {
+			if err := r.setHostRack(ctx, yc, host, rack); err != nil {
 				log.Error(err, "Set host's rack",
 					"host", host,
 					"rack", rack,
@@ -103,14 +100,14 @@ func (r *rackSetup) SetRacks(ctx context.Context) error {
 	}
 
 	for dc, dcracks := range dcs {
-		if err := r.ensureDC(ctx, dc); err != nil {
+		if err := r.ensureDC(ctx, yc, dc); err != nil {
 			log.Error(err, "Ensure DC",
 				"dc", dc,
 			)
 			continue
 		}
 		for rack := range dcracks {
-			if err := r.setRackDC(ctx, rack, dc); err != nil {
+			if err := r.setRackDC(ctx, yc, rack, dc); err != nil {
 				log.Error(err, "Set rack's datacenter",
 					"rack", rack,
 					"dc", dc,
@@ -120,7 +117,7 @@ func (r *rackSetup) SetRacks(ctx context.Context) error {
 
 			hosts := racks[rack]
 			for host := range hosts {
-				if err := r.setHostDC(ctx, host, dc); err != nil {
+				if err := r.setHostDC(ctx, yc, host, dc); err != nil {
 					log.Error(err, "Set host's datacenter",
 						"host", host,
 						"dc", dc,
@@ -134,9 +131,8 @@ func (r *rackSetup) SetRacks(ctx context.Context) error {
 	return nil
 }
 
-func (r *rackSetup) ensureRack(ctx context.Context, rack string) error {
+func (r *rackSetup) ensureRack(ctx context.Context, yc yt.Client, rack string) error {
 	log := klog.FromContext(ctx)
-	yc := r.yt.GetYtClient()
 
 	exist, err := yc.NodeExists(ctx, ypath.Path("//sys/racks").Child(rack), &yt.NodeExistsOptions{})
 	if err != nil {
@@ -164,8 +160,7 @@ func (r *rackSetup) ensureRack(ctx context.Context, rack string) error {
 	return nil
 }
 
-func (r *rackSetup) setHostRack(ctx context.Context, host, rack string) error {
-	yc := r.yt.GetYtClient()
+func (r *rackSetup) setHostRack(ctx context.Context, yc yt.Client, host, rack string) error {
 	// Same as
 	//
 	// 	yt set "//sys/cluster_nodes/$host/@rack" "$rack"
@@ -180,9 +175,8 @@ func (r *rackSetup) setHostRack(ctx context.Context, host, rack string) error {
 	return nil
 }
 
-func (r *rackSetup) ensureDC(ctx context.Context, dc string) error {
+func (r *rackSetup) ensureDC(ctx context.Context, yc yt.Client, dc string) error {
 	log := klog.FromContext(ctx)
-	yc := r.yt.GetYtClient()
 
 	exist, err := yc.NodeExists(ctx, ypath.Path("//sys/data_centers").Child(dc), &yt.NodeExistsOptions{})
 	if err != nil {
@@ -210,8 +204,7 @@ func (r *rackSetup) ensureDC(ctx context.Context, dc string) error {
 	return nil
 }
 
-func (r *rackSetup) setRackDC(ctx context.Context, rack, dc string) error {
-	yc := r.yt.GetYtClient()
+func (r *rackSetup) setRackDC(ctx context.Context, yc yt.Client, rack, dc string) error {
 	// Same as
 	//
 	// 	yt set "//sys/racks/$rack/@data_center" "$dc"
@@ -226,8 +219,7 @@ func (r *rackSetup) setRackDC(ctx context.Context, rack, dc string) error {
 	return nil
 }
 
-func (r *rackSetup) setHostDC(ctx context.Context, host, dc string) error {
-	yc := r.yt.GetYtClient()
+func (r *rackSetup) setHostDC(ctx context.Context, yc yt.Client, host, dc string) error {
 	// Same as
 	//
 	// 	yt set "//sys/cluster_nodes/$host/@data_center" "$dc"
