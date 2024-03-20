@@ -21880,11 +21880,13 @@ spec:
               rackAwareness:
                 properties:
                   dcLabel:
+                    minLength: 1
                     type: string
                   enable:
                     default: false
                     type: boolean
                   rackLabel:
+                    minLength: 1
                     type: string
                 type: object
               rpcProxies:
