@@ -40,7 +40,7 @@ func (r *rackSetup) SetRacks(ctx context.Context) error {
 	log := klog.FromContext(ctx)
 
 	spec := r.ytsaurus.GetResource().Spec.RackAwareness
-	if spec.RackLabel == "" {
+	if !spec.Enable {
 		return nil
 	}
 	log.Info("Creating racks",
