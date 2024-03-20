@@ -21877,6 +21877,16 @@ spec:
                       type: object
                     type: array
                 type: object
+              rackAwareness:
+                properties:
+                  dcLabel:
+                    type: string
+                  enable:
+                    default: false
+                    type: boolean
+                  rackLabel:
+                    type: string
+                type: object
               rpcProxies:
                 items:
                   properties:
