@@ -50,6 +50,7 @@ func NewDataNode(
 	)
 
 	rack := newRackSetup(
+		cfgen.GetDataNodeHost,
 		ytsaurus,
 		l,
 		consts.DataNodeRPCPort,

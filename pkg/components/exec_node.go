@@ -56,6 +56,7 @@ func NewExecNode(
 	)
 
 	rack := newRackSetup(
+		cfgen.GetExecNodeHost,
 		ytsaurus,
 		l,
 		consts.ExecNodeRPCPort,

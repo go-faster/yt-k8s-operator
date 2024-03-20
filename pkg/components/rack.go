@@ -16,20 +16,23 @@ import (
 )
 
 type rackSetup struct {
-	ytsaurus *apiproxy.Ytsaurus
-	labeller labeller.Labeller
-	nodePort string
+	serviceName func(name string) string
+	ytsaurus    *apiproxy.Ytsaurus
+	labeller    labeller.Labeller
+	nodePort    string
 }
 
 func newRackSetup(
+	serviceName func(name string) string,
 	ytsaurus *apiproxy.Ytsaurus,
 	labeller labeller.Labeller,
 	nodePort int,
 ) *rackSetup {
 	return &rackSetup{
-		ytsaurus: ytsaurus,
-		labeller: labeller,
-		nodePort: strconv.Itoa(nodePort),
+		serviceName: serviceName,
+		ytsaurus:    ytsaurus,
+		labeller:    labeller,
+		nodePort:    strconv.Itoa(nodePort),
 	}
 }
 
@@ -62,7 +65,7 @@ func (r *rackSetup) SetRacks(ctx context.Context, yc yt.Client) error {
 		if !ok {
 			continue
 		}
-		host := net.JoinHostPort(pod.Spec.Hostname, r.nodePort)
+		host := net.JoinHostPort(r.serviceName(pod.Spec.Hostname), r.nodePort)
 
 		hosts, ok := racks[rack]
 		if !ok {

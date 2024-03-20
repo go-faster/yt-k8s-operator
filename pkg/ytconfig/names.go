@@ -142,6 +142,22 @@ func (g *Generator) GetHTTPProxiesAddress(role string) string {
 		g.clusterDomain)
 }
 
+func (g *Generator) GetExecNodeHost(name string) string {
+	return g.getHost(name, "exec-nodes")
+}
+
+func (g *Generator) GetDataNodeHost(name string) string {
+	return g.getHost(name, "data-nodes")
+}
+
+func (g *Generator) getHost(name, service string) string {
+	return fmt.Sprintf("%s.%s.%s.svc.%s",
+		g.getName(name),
+		service,
+		g.ytsaurus.Namespace,
+		g.clusterDomain)
+}
+
 func (g *Generator) GetSchedulerStatefulSetName() string {
 	return g.getName("sch")
 }
