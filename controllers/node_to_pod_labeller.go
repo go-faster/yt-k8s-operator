@@ -16,10 +16,10 @@ type NodeToPodLabeller struct {
 	Labels map[string]struct{}
 }
 
-//+kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups="",resources=pods/binding;,verbs=create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-v1-pod-binding,mutating=true,failurePolicy=ignore,sideEffects=None,groups="",resources=pods/binding;,verbs=create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
 //+kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list
 
-const apiPathMutatePod = "/mutate-v1-pod"
+const apiPathMutatePod = "/mutate-v1-pod-binding"
 
 func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	client := mgr.GetClient()
