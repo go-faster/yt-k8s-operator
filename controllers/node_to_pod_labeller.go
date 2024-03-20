@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/ytsaurus/yt-k8s-operator/pkg/consts"
 	corev1 "k8s.io/api/core/v1"
@@ -14,7 +15,7 @@ import (
 )
 
 type NodeToPodLabeller struct {
-	Labels map[string]struct{}
+	LabelRegex *regexp.Regexp
 }
 
 //+kubebuilder:webhook:path=/mutate-v1-pod-binding,mutating=true,failurePolicy=ignore,sideEffects=None,groups="",resources=pods/binding;,verbs=create;update,versions=v1,name=yt-pod-rack.kb.io,admissionReviewVersions=v1
@@ -80,15 +81,18 @@ func (l *NodeToPodLabeller) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 			pod = pod.DeepCopy()
 			var patched int
-			for name := range l.Labels {
-				if val, ok := node.Labels[name]; ok {
-					if pod.Labels == nil {
-						pod.Labels = map[string]string{}
-					}
-					patched++
-					pod.Labels[name] = val
+			for name, value := range node.Labels {
+				if !l.LabelRegex.MatchString(name) {
+					continue
 				}
+
+				if pod.Labels == nil {
+					pod.Labels = map[string]string{}
+				}
+				pod.Labels[name] = value
+				patched++
 			}
+
 			logger.V(1).Info("Patching pod",
 				"pod", podName,
 				"node", nodeName,

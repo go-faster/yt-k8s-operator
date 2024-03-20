@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -167,11 +168,19 @@ func main() {
 		}
 	}
 	if enableWebhooks && boolEnv("ENABLE_TOPOLOGY_LABEL_COPIER", true) {
+		rawRe := `topology.kubernetes.io/.+`
+		if e := os.Getenv("TOPOLOGY_LABEL_REGEX"); e != "" {
+			rawRe = e
+		}
+
+		re, err := regexp.Compile(rawRe)
+		if err != nil {
+			setupLog.Error(err, "compile label regex", "regex", rawRe)
+			os.Exit(1)
+		}
+
 		if err = (&controllers.NodeToPodLabeller{
-			Labels: map[string]struct{}{
-				"topology.kubernetes.io/zone":   {},
-				"topology.kubernetes.io/region": {},
-			},
+			LabelRegex: re,
 		}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Pod")
 			os.Exit(1)
