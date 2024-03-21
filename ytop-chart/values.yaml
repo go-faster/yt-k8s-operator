@@ -86,3 +86,6 @@ webhookService:
     protocol: TCP
     targetPort: 9443
   type: ClusterIP
+topologyPropagator:
+  enabled: false
+  labelRegex: 'topology.kubernetes.io/.+'
