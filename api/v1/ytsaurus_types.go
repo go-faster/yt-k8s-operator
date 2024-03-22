@@ -479,6 +479,8 @@ type YtsaurusSpec struct {
 	//+optional
 	HostNetwork bool `json:"hostNetwork"`
 
+	RackAwareness RackAwarenessSpec `json:"rackAwareness,omitempty"`
+
 	ExtraPodAnnotations map[string]string `json:"extraPodAnnotations,omitempty"`
 	ExtraPodLabels      map[string]string `json:"extraPodLabels,omitempty"`
 
@@ -509,6 +511,18 @@ type YtsaurusSpec struct {
 	UI *UISpec `json:"ui,omitempty"`
 
 	Jobs *JobsSpec `json:"jobs,omitempty"`
+}
+
+type RackAwarenessSpec struct {
+	//+kubebuilder:default:=false
+	//+optional
+	Enable bool `json:"enable,omitempty"`
+	//+kubebuilder:validation:MinLength:=1
+	//+optional
+	RackLabel string `json:"rackLabel,omitempty"`
+	//+kubebuilder:validation:MinLength:=1
+	//+optional
+	DCLabel string `json:"dcLabel,omitempty"`
 }
 
 type JobsSpec struct {

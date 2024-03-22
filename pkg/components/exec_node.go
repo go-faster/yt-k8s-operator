@@ -21,11 +21,15 @@ type execNode struct {
 	master     Component
 	sidecars   []string
 	privileged bool
+
+	yc   YtsaurusClient
+	rack *rackSetup
 }
 
 func NewExecNode(
 	cfgen *ytconfig.Generator,
 	ytsaurus *apiproxy.Ytsaurus,
+	yc YtsaurusClient,
 	master Component,
 	spec ytv1.ExecNodesSpec,
 ) Component {
@@ -51,6 +55,13 @@ func NewExecNode(
 		},
 	)
 
+	rack := newRackSetup(
+		cfgen.GetExecNodeHost,
+		ytsaurus,
+		l,
+		consts.ExecNodeRPCPort,
+	)
+
 	return &execNode{
 		componentBase: componentBase{
 			labeller: &l,
@@ -61,6 +72,8 @@ func NewExecNode(
 		master:     master,
 		sidecars:   spec.Sidecars,
 		privileged: spec.Privileged,
+		yc:         yc,
+		rack:       rack,
 	}
 }
 
@@ -124,6 +137,13 @@ func (n *execNode) doSync(ctx context.Context, dry bool) (ComponentStatus, error
 
 	if !n.server.arePodsReady(ctx) {
 		return WaitingStatus(SyncStatusBlocked, "pods"), err
+	}
+
+	if n.yc.Status(ctx).SyncStatus != SyncStatusReady {
+		return WaitingStatus(SyncStatusBlocked, n.yc.GetName()), err
+	}
+	if err := n.rack.SetRacks(ctx, n.yc.GetYtClient()); err != nil {
+		return WaitingStatus(SyncStatusBlocked, "rack_awareness"), err
 	}
 
 	return SimpleStatus(SyncStatusReady), err

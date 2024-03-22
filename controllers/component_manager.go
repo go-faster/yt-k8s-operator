@@ -54,7 +54,7 @@ func NewComponentManager(
 	var dnds []components.Component
 	if resource.Spec.DataNodes != nil && len(resource.Spec.DataNodes) > 0 {
 		for _, dndSpec := range ytsaurus.GetResource().Spec.DataNodes {
-			dnds = append(dnds, components.NewDataNode(cfgen, ytsaurus, m, dndSpec))
+			dnds = append(dnds, components.NewDataNode(cfgen, ytsaurus, yc, m, dndSpec))
 		}
 	}
 
@@ -91,7 +91,7 @@ func NewComponentManager(
 	var ends []components.Component
 	if resource.Spec.ExecNodes != nil && len(resource.Spec.ExecNodes) > 0 {
 		for _, endSpec := range ytsaurus.GetResource().Spec.ExecNodes {
-			ends = append(ends, components.NewExecNode(cfgen, ytsaurus, m, endSpec))
+			ends = append(ends, components.NewExecNode(cfgen, ytsaurus, yc, m, endSpec))
 		}
 	}
 	allComponents = append(allComponents, ends...)

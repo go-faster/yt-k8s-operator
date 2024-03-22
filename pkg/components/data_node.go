@@ -15,11 +15,15 @@ type dataNode struct {
 	componentBase
 	server server
 	master Component
+
+	yc   YtsaurusClient
+	rack *rackSetup
 }
 
 func NewDataNode(
 	cfgen *ytconfig.Generator,
 	ytsaurus *apiproxy.Ytsaurus,
+	yc YtsaurusClient,
 	master Component,
 	spec ytv1.DataNodesSpec,
 ) Component {
@@ -45,6 +49,13 @@ func NewDataNode(
 		},
 	)
 
+	rack := newRackSetup(
+		cfgen.GetDataNodeHost,
+		ytsaurus,
+		l,
+		consts.DataNodeRPCPort,
+	)
+
 	return &dataNode{
 		componentBase: componentBase{
 			labeller: &l,
@@ -53,6 +64,8 @@ func NewDataNode(
 		},
 		server: server,
 		master: master,
+		yc:     yc,
+		rack:   rack,
 	}
 }
 
@@ -90,6 +103,13 @@ func (n *dataNode) doSync(ctx context.Context, dry bool) (ComponentStatus, error
 
 	if !n.server.arePodsReady(ctx) {
 		return WaitingStatus(SyncStatusBlocked, "pods"), err
+	}
+
+	if n.yc.Status(ctx).SyncStatus != SyncStatusReady {
+		return WaitingStatus(SyncStatusBlocked, n.yc.GetName()), err
+	}
+	if err := n.rack.SetRacks(ctx, n.yc.GetYtClient()); err != nil {
+		return WaitingStatus(SyncStatusBlocked, "rack_awareness"), err
 	}
 
 	return SimpleStatus(SyncStatusReady), err
