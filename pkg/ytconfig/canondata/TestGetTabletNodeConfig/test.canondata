@@ -82,6 +82,7 @@
         "rack:xn-a";
     ];
     rack=fake;
+    hostname="{K8S_NODE_NAME}";
     "skynet_http_port"=11022;
     "caching_object_service"={
         capacity=0;

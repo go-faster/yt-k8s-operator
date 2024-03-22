@@ -82,6 +82,7 @@
         "rack:xn-a";
     ];
     rack=fake;
+    hostname="{K8S_NODE_NAME}";
     "skynet_http_port"=11012;
     "data_node"={
         "store_locations"=[
