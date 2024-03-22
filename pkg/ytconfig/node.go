@@ -150,6 +150,7 @@ type NodeServer struct {
 	ResourceLimits ResourceLimits `yson:"resource_limits, omitempty"`
 	Tags           []string       `yson:"tags, omitempty"`
 	Rack           string         `yson:"rack, omitempty"`
+	Hostname       string         `yson:"hostname,omitempty"`
 	SkynetHttpPort int32          `yson:"skynet_http_port"`
 }
 
@@ -245,6 +246,7 @@ func fillClusterNodeServerCarcass(n *NodeServer, spec ytv1.ClusterNodesSpec, fla
 	n.Flavors = []NodeFlavor{flavor}
 	n.Tags = spec.Tags
 	n.Rack = spec.Rack
+	n.Hostname = "{K8S_NODE_NAME}"
 }
 
 func getDataNodeResourceLimits(spec *ytv1.DataNodesSpec) ResourceLimits {
