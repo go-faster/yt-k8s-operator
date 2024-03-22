@@ -147,10 +147,10 @@ type TabletNode struct {
 type NodeServer struct {
 	CommonServer
 	Flavors        []NodeFlavor   `yson:"flavors"`
-	ResourceLimits ResourceLimits `yson:"resource_limits, omitempty"`
-	Tags           []string       `yson:"tags, omitempty"`
-	Rack           string         `yson:"rack, omitempty"`
-	Hostname       string         `yson:"hostname,omitempty"`
+	ResourceLimits ResourceLimits `yson:"resource_limits,omitempty"`
+	Tags           []string       `yson:"tags,omitempty"`
+	Rack           string         `yson:"rack,omitempty"`
+	Hostname       string         `yson:"host_name,omitempty"`
 	SkynetHttpPort int32          `yson:"skynet_http_port"`
 }
 
