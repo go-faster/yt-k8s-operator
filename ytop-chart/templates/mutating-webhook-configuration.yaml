@@ -76,10 +76,6 @@ webhooks:
       path: /mutate-v1-pod-binding
   failurePolicy: Ignore
   name: yt-pod-rack.kb.io
-  objectSelector:
-    matchExpressions:
-      - key: yt_component
-        operator: Exists
   rules:
   - apiGroups:
     - ""
