@@ -53,11 +53,23 @@ func (r *rackSetup) SetRacks(ctx context.Context, yc yt.Client) error {
 		return fmt.Errorf("query pods: %w", err)
 	}
 
+	type mapping = map[string]map[string]struct{}
 	var (
+		set = func(m mapping, key, value string) {
+			values, ok := m[key]
+			if !ok {
+				values = map[string]struct{}{}
+				m[key] = values
+			}
+			values[value] = struct{}{}
+		}
+
+		// rack name -> [cluster node]
+		racksNodes = mapping{}
 		// rack name -> [host]
-		racks = map[string]map[string]struct{}{}
+		racks = mapping{}
 		// dc name -> [rack]
-		dcs = map[string]map[string]struct{}{}
+		dcs = mapping{}
 	)
 
 	for _, pod := range podList.Items {
@@ -65,22 +77,16 @@ func (r *rackSetup) SetRacks(ctx context.Context, yc yt.Client) error {
 		if !ok {
 			continue
 		}
-		host := net.JoinHostPort(r.serviceName(pod.Spec.Hostname), r.nodePort)
 
-		hosts, ok := racks[rack]
-		if !ok {
-			hosts = map[string]struct{}{}
-			racks[rack] = hosts
+		if host := pod.Spec.NodeName; host != "" {
+			set(racks, rack, host)
 		}
-		hosts[host] = struct{}{}
+
+		node := net.JoinHostPort(r.serviceName(pod.Spec.Hostname), r.nodePort)
+		set(racksNodes, rack, node)
 
 		if dc, ok := pod.Labels[spec.DCLabel]; ok {
-			dcracks, ok := dcs[dc]
-			if !ok {
-				dcracks = map[string]struct{}{}
-				dcs[dc] = dcracks
-			}
-			dcracks[rack] = struct{}{}
+			set(dcs, dc, rack)
 		}
 	}
 
@@ -91,10 +97,22 @@ func (r *rackSetup) SetRacks(ctx context.Context, yc yt.Client) error {
 			)
 			continue
 		}
+
 		for host := range hosts {
 			if err := r.setHostRack(ctx, yc, host, rack); err != nil {
 				log.Error(err, "Set host's rack",
 					"host", host,
+					"rack", rack,
+				)
+				continue
+			}
+		}
+
+		nodes := racksNodes[rack]
+		for node := range nodes {
+			if err := r.setNodeRack(ctx, yc, node, rack); err != nil {
+				log.Error(err, "Set node's rack",
+					"node", node,
 					"rack", rack,
 				)
 				continue
@@ -123,6 +141,17 @@ func (r *rackSetup) SetRacks(ctx context.Context, yc yt.Client) error {
 				if err := r.setHostDC(ctx, yc, host, dc); err != nil {
 					log.Error(err, "Set host's datacenter",
 						"host", host,
+						"dc", dc,
+					)
+					continue
+				}
+			}
+
+			nodes := racks[rack]
+			for node := range nodes {
+				if err := r.setNodeDC(ctx, yc, node, dc); err != nil {
+					log.Error(err, "Set node's datacenter",
+						"node", node,
 						"dc", dc,
 					)
 					continue
@@ -166,10 +195,25 @@ func (r *rackSetup) ensureRack(ctx context.Context, yc yt.Client, rack string) e
 func (r *rackSetup) setHostRack(ctx context.Context, yc yt.Client, host, rack string) error {
 	// Same as
 	//
-	// 	yt set "//sys/cluster_nodes/$host/@rack" "$rack"
+	// 	yt set "//sys/hosts/$host/@rack" "$rack"
 	//
 	if err := yc.SetNode(ctx,
-		ypath.Path("//sys/cluster_nodes").Child(host).Attr("rack"),
+		ypath.Path("//sys/hosts").Child(host).Attr("rack"),
+		rack,
+		&yt.SetNodeOptions{},
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *rackSetup) setNodeRack(ctx context.Context, yc yt.Client, node, rack string) error {
+	// Same as
+	//
+	// 	yt set "//sys/cluster_nodes/$node/@rack" "$rack"
+	//
+	if err := yc.SetNode(ctx,
+		ypath.Path("//sys/cluster_nodes").Child(node).Attr("rack"),
 		rack,
 		&yt.SetNodeOptions{},
 	); err != nil {
@@ -225,10 +269,25 @@ func (r *rackSetup) setRackDC(ctx context.Context, yc yt.Client, rack, dc string
 func (r *rackSetup) setHostDC(ctx context.Context, yc yt.Client, host, dc string) error {
 	// Same as
 	//
-	// 	yt set "//sys/cluster_nodes/$host/@data_center" "$dc"
+	// 	yt set "//sys/hosts/$host/@data_center" "$dc"
 	//
 	if err := yc.SetNode(ctx,
-		ypath.Path("//sys/cluster_nodes").Child(host).Attr("data_center"),
+		ypath.Path("//sys/hosts").Child(host).Attr("data_center"),
+		dc,
+		&yt.SetNodeOptions{},
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *rackSetup) setNodeDC(ctx context.Context, yc yt.Client, node, dc string) error {
+	// Same as
+	//
+	// 	yt set "//sys/cluster_nodes/$node/@data_center" "$dc"
+	//
+	if err := yc.SetNode(ctx,
+		ypath.Path("//sys/cluster_nodes").Child(node).Attr("data_center"),
 		dc,
 		&yt.SetNodeOptions{},
 	); err != nil {
